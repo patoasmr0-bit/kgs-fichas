@@ -209,6 +209,9 @@ const STEPS={
 };
 const AGUA={acs:'Agua caliente sanitaria',afch:'Agua fría de consumo humano'};
 const ANL={leg:'Legionella',aer:'Aerobios',fe:'Hierro'};
+const TRANSP={buena:'Buena',regular:'Regular',mala:'Mala'};
+const toN=v=>{const n=parseFloat(String(v==null?'':v).replace(',','.'));return isNaN(n)?null:n};
+function sumCl(p){const a=toN(p.clL),b=toN(p.clR);if(a===null&&b===null)return '';return String(Math.round(((a||0)+(b||0))*100)/100).replace('.',',')}
 const ANO=['leg','aer','fe'];
 const anLabel=a=>Array.isArray(a)&&a.length?ANO.filter(k=>a.includes(k)).map(k=>ANL[k]).join(', '):'—';
 const INST={sanitaria:['Agua sanitaria','grifos y tuberías'],incendios:['Circuito contra incendios',''],riego:['Riego por aspersión',''],lavadero:['Lavadero de vehículos',''],clinica:['Clínica',''],otra:['Otra','']};
@@ -416,6 +419,7 @@ function pv(d,p,withUnit){
  const k=d[0],unit=d[2];let v=p[k];
  if(k==='agua')return AGUA[v]||'—';
  if(k==='an')return anLabel(v);
+ if(k==='transp')return TRANSP[v]||(v==null||v===''?'—':String(v));
  if(v==null||v==='')return '—';
  return withUnit&&unit?v+' '+unit:String(v);
 }
@@ -563,6 +567,10 @@ function anFld(){
  const b=(k,l)=>'<button type="button" class="ch'+(a.includes(k)?' on':'')+'" data-act="tog" data-b="pt.an" data-v="'+k+'">'+(a.includes(k)?ico('check',22):'')+l+'</button>';
  return '<div class="fld"><div class="lab">Análisis de esta muestra</div><div class="grid2">'+b('leg','Legionella')+b('aer','Aerobios')+b('fe','Hierro')+'<button type="button" class="ch'+(all?' on':'')+'" data-act="an3">'+(all?ico('check',22):'')+'Las 3</button></div><p class="hint">Marca lo que se analiza en esta botella: solo legionella, o también aerobios y hierro.</p></div>';
 }
+function transpFld(){
+ const v=S.pt.transp,b=(k,l)=>'<button type="button" class="ch'+(v===k?' on':'')+'" data-act="set" data-b="pt.transp" data-v="'+k+'">'+(v===k?ico('check',20):'')+l+'</button>';
+ return '<div class="fld"><div class="lab">Transparencia</div><div class="seg" style="grid-template-columns:repeat(3,1fr)">'+b('buena','Buena')+b('regular','Regular')+b('mala','Mala')+'</div></div>';
+}
 function sheetFields(){
  const t=S.ficha.tipo;let h='';
  if(t==='quimica'){
@@ -580,8 +588,11 @@ function sheetFields(){
   h+=pickFld('t','pt.temp','Temperatura','°C')+pickFld('cl','pt.cl','Cloro','ppm')+pickFld('ph','pt.ph','pH','');
  }else{
   h+=txt('pt.nom','Nombre del vaso',{ph:'Ej.: Vaso grande',cap:'sentences'});
-  h+=numFld('pt.clL','Cloro libre','ppm',{dec:1})+numFld('pt.clR','Cloro residual','ppm',{dec:1})+numFld('pt.clT','Cloro total','ppm',{dec:1})+numFld('pt.ph','pH','',{dec:1})+numFld('pt.turb','Turbidez','UNF',{dec:1});
-  h+=txt('pt.transp','Transparencia',{ph:'Ej.: Total'})+numFld('pt.cya','Ácido isocianúrico','mg/L',{dec:1});
+  S.pt.clT=sumCl(S.pt);
+  h+=numFld('pt.clL','Cloro libre','ppm',{dec:1})+numFld('pt.clR','Cloro residual','ppm',{dec:1});
+  h+='<div class="fld"><div class="lab">Cloro total <span class="un">(libre + residual, se suma solo)</span></div><div class="inu"><input class="in" id="clT" readonly tabindex="-1" style="background:var(--ct);font-weight:700" value="'+esc(S.pt.clT)+'" placeholder="—" aria-label="Cloro total"><span class="u">ppm</span></div></div>';
+  h+=numFld('pt.ph','pH','',{dec:1})+numFld('pt.turb','Turbidez','UNF',{dec:1});
+  h+=transpFld()+numFld('pt.cya','Ácido isocianúrico','mg/L',{dec:1});
  }
  return h;
 }
@@ -737,7 +748,7 @@ function csvAll(){
   const list=f.puntos.length?f.puntos:[null];
   list.forEach((p,i)=>{
    const r=Object.assign({},baseR);
-   if(p){r['Nº punto']=i+1;const m=MAP[f.tipo]||{};Object.keys(m).forEach(k=>{r[m[k]]=k==='agua'?(AGUA[p[k]]||''):k==='an'?(Array.isArray(p[k])?anLabel(p[k]).replace('—',''):''):p[k]})}
+   if(p){r['Nº punto']=i+1;const m=MAP[f.tipo]||{};Object.keys(m).forEach(k=>{r[m[k]]=k==='agua'?(AGUA[p[k]]||''):k==='an'?(Array.isArray(p[k])?anLabel(p[k]).replace('—',''):''):k==='transp'?(TRANSP[p[k]]||p[k]):p[k]})}
    rows.push(H.map(h=>q(r[h])));
   });
  });
@@ -806,6 +817,7 @@ const acts={
  ptedit(el){S.ptIdx=+el.dataset.i;S.pt=clone(S.ficha.puntos[S.ptIdx]);saveDraft();renderSheet()},
  async ptdel(el){const i=+el.dataset.i;if(await confirmBox('¿Borrar el punto '+(i+1)+'?',(S.ficha.puntos[i].nom||'Sin nombre'),'Borrar punto')){S.ficha.puntos.splice(i,1);saveDraft();render(true)}},
  ptsave(){
+  if(S.ficha.tipo==='piscina')S.pt.clT=sumCl(S.pt);
   if(S.ptIdx>=0)S.ficha.puntos[S.ptIdx]=clone(S.pt);else S.ficha.puntos.push(clone(S.pt));
   S.pt=null;S.ptIdx=-1;saveDraft();render(true);
  },
@@ -871,7 +883,9 @@ function onField(e){
   if(v!==t.value)t.value=v;
  }
  if('int' in t.dataset){v=v.replace(/\D/g,'');if(v!==t.value)t.value=v}
- set(p,v);touchDraft();
+ set(p,v);
+ if(p==='pt.clL'||p==='pt.clR'){S.pt.clT=sumCl(S.pt);const e=$('#clT');if(e)e.value=S.pt.clT}
+ touchDraft();
 }
 document.addEventListener('input',onField);
 document.addEventListener('change',onField);
