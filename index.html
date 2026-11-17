@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KGS Fichas">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>KGS · Fichas de campo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0B1220;--mut:#445066;--line:#B9C3D0;--bg:#EDF0F4;--c:#0B1220;--cd:#0B1220;--ct:#E6EAF0;--bad:#B42318;--ok:#15803D}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:18px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;line-height:1.35;min-height:100vh}
+body.lock{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+.ic{flex:none}
+.in-w{max-width:640px;margin:0 auto}
+.top{background:var(--c);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 16px 16px}
+.top .row{display:flex;align-items:center;gap:12px;min-height:48px}
+.top h1{margin:0;font-size:1.6rem;line-height:1.15}
+.hx{width:48px;height:48px;border-radius:12px;border:2px solid rgba(255,255,255,.8);background:transparent;color:#fff;display:grid;place-items:center}
+.stp{font-weight:700;font-size:1.05rem}
+.tg{margin-left:auto;font-weight:700;background:#fff;color:var(--cd);padding:6px 12px;border-radius:99px;font-size:.95rem}
+.bar{display:flex;gap:5px;margin:10px 0 12px}
+.bar i{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.35)}
+.bar i.on{background:#fff}
+.brand{display:flex;align-items:center;gap:12px}
+.bm{width:48px;height:48px;border-radius:12px;background:#fff;color:var(--ink);display:grid;place-items:center;font-weight:700;letter-spacing:.02em}
+.brand b{display:block;font-size:1.25rem}
+.brand span{font-size:.85rem;opacity:.85}
+.sync{margin-top:12px;font-size:.85rem;display:inline-flex;gap:8px;align-items:center;background:rgba(255,255,255,.14);padding:6px 12px;border-radius:99px}
+.sync i{width:10px;height:10px;border-radius:50%;background:#7CE3A1}
+.sync i.w{background:#FFC857}
+.pad{padding:16px 16px 40px;max-width:640px;margin:0 auto}
+main.form{padding-bottom:140px}
+.big{width:100%;min-height:112px;border:0;border-radius:20px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:14px;padding:16px 18px;text-align:left;margin-bottom:14px}
+.big .bt{flex:1;font-size:1.45rem;font-weight:700;line-height:1.15}
+.chips{display:flex;gap:8px}
+.chip{width:36px;height:36px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;box-shadow:0 0 0 2px #fff}
+.sec{font-size:1.3rem;margin:26px 0 10px}
+.search{position:relative;margin-bottom:12px}
+.search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut)}
+.search .in{padding-left:46px}
+.item{width:100%;display:flex;align-items:center;gap:12px;background:#fff;border:2px solid var(--line);border-left:10px solid var(--c);border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;min-height:72px}
+.ib{width:44px;height:44px;border-radius:12px;background:var(--ct);color:var(--cd);display:grid;place-items:center;flex:none}
+.it{flex:1;min-width:0}
+.it b{display:block;font-size:1.15rem;overflow-wrap:anywhere}
+.it span{color:var(--mut);font-size:.95rem}
+.empty{background:#fff;border:2px dashed var(--line);border-radius:16px;padding:20px;text-align:center;color:var(--mut);margin-bottom:14px}
+.draft{background:#FFF7DB;border:2px solid #B7791F;border-radius:16px;padding:14px;margin:4px 0 14px}
+.draft p{margin:0 0 10px}
+.draft .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{min-height:60px;border:2px solid var(--ink);background:#fff;border-radius:14px;font-weight:700;font-size:1.1rem;padding:0 18px;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:var(--ink);text-align:center}
+.btn.pri{background:var(--c);border-color:var(--c);color:#fff}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn.wide{width:100%;margin-top:6px}
+.btn.off{background:#D5DAE1;border-color:#D5DAE1;color:#5B6778}
+.btn[disabled]{opacity:.5}
+.btn.sm{min-height:62px}
+.nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:2px solid var(--ink);padding:12px 16px calc(env(safe-area-inset-bottom) + 12px);display:grid;grid-template-columns:1fr 1.6fr;gap:12px;z-index:20}
+.nav .btn{min-height:64px;font-size:1.2rem}
+.fld{margin:0 0 22px}
+.lab{font-weight:700;font-size:1.05rem;margin:0 0 8px}
+.un{font-weight:400;color:var(--mut)}
+.in{width:100%;height:62px;border:2px solid #5B6778;border-radius:14px;background:#fff;padding:0 14px;font-size:1.25rem}
+.in:focus{outline:3px solid var(--c);outline-offset:1px;border-color:var(--c)}
+.in.ta{height:auto;min-height:220px;padding:14px;line-height:1.4;resize:vertical}
+.inu{position:relative}
+.inu .in{padding-right:64px}
+.inu .u{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--mut)}
+.tm{display:grid;grid-template-columns:1fr auto;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ch{min-height:64px;border:2px solid var(--ink);background:#fff;border-radius:14px;font-weight:700;font-size:1.15rem;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 10px;text-align:center;line-height:1.15}
+.ch.on{background:var(--c);border-color:var(--c);color:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pick,.cnt{display:grid;grid-template-columns:64px 1fr 64px;gap:8px;align-items:center}
+.pm{height:64px;border:2px solid var(--ink);border-radius:14px;background:#fff;display:grid;place-items:center}
+.pm:active{background:var(--ct)}
+.sel{height:64px;font-weight:700;font-size:1.4rem;text-align:center;text-align-last:center;padding:0 8px}
+.cv{text-align:center;font-size:2.2rem;font-weight:700}
+.tp{width:100%;min-height:112px;border:3px solid var(--c);border-radius:20px;background:#fff;display:flex;align-items:center;gap:16px;padding:16px;margin-bottom:16px;text-align:left;color:var(--ink)}
+.tpi{width:68px;height:68px;border-radius:18px;background:var(--ct);color:var(--c);display:grid;place-items:center;flex:none}
+.tpt{flex:1;font-size:1.6rem}
+.tpt b{display:block}
+.tpt small{font-size:.95rem;font-weight:400;color:var(--mut)}
+.tp.on{background:var(--c);color:#fff}
+.tp.on .tpi{background:#fff}
+.tp.on small{color:#fff}
+.ch small{display:block;font-weight:400;font-size:.85rem;margin-top:2px}
+.grp{background:#fff;border:2px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
+.grh{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.grh b{flex:1;font-size:1.15rem}
+.grh .pn{width:34px;height:34px;font-size:1rem}
+.pc{display:flex;gap:12px;background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px}
+.pn{width:44px;height:44px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.2rem;flex:none}
+.pb{flex:1;min-width:0}
+.pb b{font-size:1.15rem;display:block;overflow-wrap:anywhere}
+.vals{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:.95rem}
+.vals i{font-style:normal;color:var(--mut);margin-right:4px}
+.pa{display:flex;flex-direction:column;gap:8px}
+.ib2{width:48px;height:48px;border:2px solid var(--ink);background:#fff;border-radius:12px;display:grid;place-items:center}
+.ib2.bad{color:var(--bad);border-color:var(--bad)}
+.sm{background:#fff;border:2px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
+.smh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.smh h3{margin:0;font-size:1.15rem;color:var(--cd)}
+.lnk{border:2px solid var(--c);background:#fff;color:var(--cd);border-radius:10px;padding:0 14px;font-weight:700;min-height:44px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}
+.kv dt{color:var(--mut)}
+.kv dd{margin:0;font-weight:700;text-align:right;overflow-wrap:anywhere}
+.ptb{border-top:2px solid var(--line);padding-top:12px;margin-top:12px}
+.ptb:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.pth{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-weight:700;font-size:1.1rem}
+.pth .pn{width:34px;height:34px;font-size:1rem}
+.obs{white-space:pre-wrap;overflow-wrap:anywhere}
+.warn{background:#FFF1F0;border:2px solid var(--bad);border-radius:16px;padding:14px;margin-bottom:14px}
+.warn h3{margin:0 0 8px;color:var(--bad);display:flex;gap:8px;align-items:center}
+.warn div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;font-weight:700}
+.center{text-align:center}.muted{color:var(--mut)}.strong{font-weight:700;font-size:1.25rem}
+.ok{width:84px;height:84px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;margin:8px auto 12px}
+.fn{background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px;font-size:.9rem;overflow-wrap:anywhere;margin:12px 0}
+.stack{display:grid;gap:12px}
+.hint{font-size:.9rem;color:var(--mut);margin:8px 0 0}
+.ov{position:fixed;inset:0;background:rgba(11,18,32,.62);display:grid;place-items:center;padding:20px;z-index:60}
+.dlg{background:#fff;border-radius:20px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow:auto}
+.dlg h3{margin:0 0 8px;font-size:1.35rem}
+.dlg p{margin:0 0 16px}
+.dlg .btns{display:grid;gap:10px}
+.dlg textarea{width:100%;height:200px;border:2px solid var(--line);border-radius:12px;padding:10px;font-size:.9rem;margin-bottom:12px}
+.sheet{position:fixed;inset:0;background:var(--bg);z-index:40;display:flex;flex-direction:column}
+.sheet .sb{flex:1;overflow:auto;padding:18px 16px 24px;-webkit-overflow-scrolling:touch}
+.sheet .sbi{max-width:640px;margin:0 auto}
+.sheet .nav{position:static}
+#toast{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 112px);max-width:600px;margin:0 auto;background:var(--ink);color:#fff;padding:14px 16px;border-radius:14px;font-weight:700;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:80}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="layer"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript>Esta aplicación necesita JavaScript.</noscript>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+(()=>{
+'use strict';
+/* ========== utilidades ========== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const pad=n=>String(n).padStart(2,'0');
+const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const nowHM=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
+const fmtDate=iso=>iso?String(iso).split('-').reverse().join('/'):'—';
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const uid=()=>'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const yn=v=>v===true?'Sí':v===false?'No':'—';
+const slug=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,' ').trim().split(' ').filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join('').slice(0,40)||'SinNombre';
+const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
+
+/* ========== iconos ========== */
+const IC={
+flask:'<path d="M9 3h6M10 3v6l-5.2 9.2A2 2 0 0 0 6.5 21h11a2 2 0 0 0 1.7-2.8L14 9V3"/><path d="M7.6 15h8.8"/>',
+therm:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
+drop:'<path d="M12 3s6.5 6.6 6.5 11a6.5 6.5 0 0 1-13 0C5.5 9.6 12 3 12 3z"/>',
+waves:'<path d="M3 8c2.2 0 2.2-1.6 4.5-1.6S9.8 8 12 8s2.2-1.6 4.5-1.6S18.8 8 21 8"/><path d="M3 13c2.2 0 2.2-1.6 4.5-1.6S9.8 13 12 13s2.2-1.6 4.5-1.6S18.8 13 21 13"/><path d="M3 18c2.2 0 2.2-1.6 4.5-1.6S9.8 18 12 18s2.2-1.6 4.5-1.6S18.8 18 21 18"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',
+minus:'<path d="M5 12h14"/>',
+check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+x:'<path d="M6 6l12 12M18 6L6 18"/>',
+left:'<path d="M14 6l-6 6 6 6"/>',
+right:'<path d="M10 6l6 6-6 6"/>',
+edit:'<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
+trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+share:'<path d="M12 15V3M7.5 7.5L12 3l4.5 4.5"/><path d="M5 13v7h14v-7"/>',
+dl:'<path d="M12 3v12M7.5 10.5L12 15l4.5-4.5"/><path d="M5 20h14"/>',
+mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+chat:'<path d="M4 5h16v11H9l-5 4V5z"/>',
+search:'<circle cx="11" cy="11" r="6"/><path d="M16 16l5 5"/>',
+clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+warn:'<path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18v.01"/>',
+spark:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>'
+};
+const ico=(n,s=24)=>'<svg class="ic" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>';
+
+/* ========== definiciones ========== */
+const TIPOS={
+ quimica:{flow:'lim',label:'Química',short:'Desinfección química',full:'Limpieza y desinfección química',c:'#1E40AF',d:'#1E3A8A',t:'#E1E9FF',file:'Desinfeccion_Quimica',icon:'flask'},
+ termica:{flow:'lim',label:'Térmica',short:'Desinfección térmica',full:'Limpieza y desinfección térmica',c:'#C2410C',d:'#7C2D12',t:'#FFE8DA',file:'Desinfeccion_Termica',icon:'therm'},
+ legionella:{flow:'mue',label:'Legionella',short:'Muestras Legionella',full:'Toma de muestras · Legionella (RD 487/2022)',c:'#15803D',d:'#14532D',t:'#DCF5E4',file:'Muestras_Legionella',icon:'drop'},
+ piscina:{flow:'mue',label:'Piscina',short:'Muestras Piscina',full:'Toma de muestras · Piscina',c:'#0284C7',d:'#075985',t:'#DBF0FC',file:'Muestras_Piscina',icon:'waves'}
+};
+const STEPS={
+ lim:[['inst','Tipo de instalación'],['tipo','Tipo de desinfección'],['datos','Datos'],['dep','Depósitos de agua fría sanitaria'],['acu','Acumuladores de agua caliente sanitaria'],['pts','Mediciones por punto'],['obs','Observaciones'],['res','Resumen']],
+ mue:[['tipo','Tipo de muestreo'],['datos','Datos'],['pts','Puntos de muestreo'],['obs','Observaciones'],['res','Resumen']]
+};
+const AGUA={acs:'Agua caliente sanitaria',afch:'Agua fría de consumo humano'};
+const ANL={leg:'Legionella',aer:'Aerobios',fe:'Hierro'};
+const ANO=['leg','aer','fe'];
+const anLabel=a=>Array.isArray(a)&&a.length?ANO.filter(k=>a.includes(k)).map(k=>ANL[k]).join(', '):'—';
+const INST={sanitaria:['Agua sanitaria','grifos y tuberías'],incendios:['Circuito contra incendios',''],riego:['Riego por aspersión',''],lavadero:['Lavadero de vehículos',''],clinica:['Clínica',''],otra:['Otra','']};
+const instLabel=f=>!f.tipoInst||!INST[f.tipoInst]?'—':f.tipoInst==='otra'?(f.tipoInstOtro&&f.tipoInstOtro.trim()?f.tipoInstOtro.trim():'Otra'):INST[f.tipoInst][0]+(INST[f.tipoInst][1]?' ('+INST[f.tipoInst][1]+')':'');
+const MATS=['Poliéster / fibra','Acero inoxidable','Acero galvanizado','Polietileno','Hormigón','Otro'];
+/* [clave, etiqueta, unidad] */
+const PTDEF={
+ quimica:[['nom','Punto',''],['agua','Tipo de agua',''],['hora','Hora',''],['cli','Cloro inicial','ppm'],['clf','Cloro final','ppm'],['ph','pH',''],['temp','Temperatura','°C']],
+ termica:[['nom','Punto',''],['hora','Hora',''],['ti','Temp. inicial','°C'],['tf','Temp. final','°C']],
+ legionella:[['nom','Punto de muestreo',''],['agua','Tipo de agua',''],['an','Análisis',''],['temp','Temperatura','°C'],['cl','Cloro','ppm'],['ph','pH','']],
+ piscina:[['nom','Vaso',''],['clL','Cloro libre','ppm'],['clR','Cloro residual','ppm'],['clT','Cloro total','ppm'],['ph','pH',''],['turb','Turbidez','UNF'],['transp','Transparencia',''],['cya','Ácido isocianúrico','mg/L']]
+};
+const L={cl:[],ph:[],t:[]};
+for(let i=0;i<=60;i++)L.cl.push((i/2).toFixed(1).replace('.',','));
+for(let i=60;i<=90;i++)L.ph.push((i/10).toFixed(1).replace('.',','));
+for(let i=0;i<=80;i++)L.t.push(String(i));
+const LU={cl:' ppm',ph:'',t:' °C'};
+const LDEF={cl:'1,0',ph:'7,0',t:'20'};
+
+/* ========== estado ========== */
+const S={view:'home',ficha:null,step:0,pt:null,ptIdx:-1,id:null,pdf:null,pdfErr:false,fromSave:false,q:''};
+let fichas={};          /* id -> ficha */
+let memDraft=null;
+const LS_F='kgs_fichas_v1',LS_D='kgs_draft_v1';
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
+
+function newFicha(flow){
+ return{id:uid(),flow,tipo:null,tipoInst:flow==='lim'?'sanitaria':'',tipoInstOtro:'',instalacion:'',fecha:todayISO(),hora:nowHM(),responsable:'',telefono:'',
+  deposito:null,deps:[],acum:null,acs:[],puntos:[],obs:'',created:Date.now(),updated:Date.now()};
+}
+/* adapta fichas guardadas con el formato anterior (un solo depósito / acumulador) */
+function normF(f){
+ if(!f||typeof f!=='object')return f;
+ if(f.flow==='lim'){
+  if(!Array.isArray(f.deps)){f.deps=[];if(f.deposito===true&&f.dep)f.deps.push({cant:f.dep.cant||1,cap:f.dep.cap||'',material:f.dep.material||null,limpieza:f.dep.limpieza==null?null:f.dep.limpieza});delete f.dep}
+  if(!Array.isArray(f.acs)){f.acs=[];if(f.acum===true&&f.ac)f.acs.push({cant:f.ac.cant||1,cap:f.ac.cap||'',limpieza:f.ac.limpieza==null?null:f.ac.limpieza});delete f.ac}
+ }
+ return f;
+}
+function newPunto(tipo){
+ if(tipo==='quimica')return{nom:'',agua:null,hora:nowHM(),cli:'',clf:'',ph:'',temp:''};
+ if(tipo==='termica')return{nom:'',hora:nowHM(),ti:'',tf:''};
+ if(tipo==='legionella')return{nom:'',agua:null,an:['leg'],temp:'',cl:'',ph:''};
+ return{nom:'',clL:'',clR:'',clT:'',ph:'',turb:'',transp:'',cya:''};
+}
+const root=()=>({ficha:S.ficha,pt:S.pt});
+function get(p){const a=p.split('.');let o=root()[a[0]];for(let i=1;i<a.length&&o!=null;i++)o=o[a[i]];return o}
+function set(p,v){const a=p.split('.');let o=root()[a[0]];for(let i=1;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
+const curFicha=()=>S.view==='form'?S.ficha:(S.view==='detail'||S.view==='done')?fichas[S.id]:null;
+
+/* ========== borrador (en el móvil, a cada cambio) ========== */
+function saveDraft(){
+ if(S.view!=='form'||!S.ficha)return;
+ const d={f:S.ficha,step:S.step,pt:S.pt,ptIdx:S.ptIdx,t:Date.now()};
+ memDraft=d;lsSet(LS_D,d);
+}
+const touchDraft=debounce(saveDraft,200);
+const readDraft=()=>memDraft||lsGet(LS_D);
+function clearDraft(){memDraft=null;lsDel(LS_D)}
+
+/* ========== almacén: en este móvil ========== */
+function persistLocal(){if(!lsSet(LS_F,fichas))toast('No se pudo guardar en el móvil. Exporta una copia de seguridad.')}
+function syncChip(){return '<i></i>Guardado en este móvil'}
+function updateSync(){const e=$('#sync');if(e)e.innerHTML=syncChip()}
+function saveFicha(f){f.updated=Date.now();fichas[f.id]=clone(f);persistLocal()}
+function deleteFicha(id){delete fichas[id];persistLocal()}
+/* sacar archivos: menú de compartir del móvil o descarga normal */
+function downloadBlob(name,blob){
+ const a=document.createElement('a'),u=URL.createObjectURL(blob);
+ a.href=u;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();
+ setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000);
+}
+async function shareFile(name,blob,type){
+ try{
+  const file=new File([blob],name,{type});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return true}
+ }catch(e){if(e&&e.name==='AbortError')return true}
+ return false;
+}
+
+/* ========== avisos y diálogos ========== */
+let tt;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),3200)}
+function dialog({title,text,btns,html}){
+ return new Promise(res=>{
+  const o=document.createElement('div');o.className='ov';
+  o.innerHTML='<div class="dlg" role="dialog" aria-modal="true"><h3>'+esc(title)+'</h3>'+(text?'<p>'+esc(text)+'</p>':'')+(html||'')+'<div class="btns">'+btns.map((b,i)=>'<button class="btn '+(b.cls||'')+'" data-i="'+i+'">'+esc(b.l)+'</button>').join('')+'</div></div>';
+  o.addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;o.remove();res(btns[+b.dataset.i].v)});
+  document.body.appendChild(o);
+ });
+}
+const confirmBox=(title,text,ok)=>dialog({title,text,btns:[{l:ok,v:true,cls:'bad'},{l:'Cancelar',v:false}]});
+
+/* ========== componentes de formulario ========== */
+function txt(path,label,opt={}){
+ const v=get(path)||'';
+ return '<div class="fld"><div class="lab">'+label+'</div><input class="in" type="'+(opt.type||'text')+'" data-b="'+path+'" value="'+esc(v)+'" placeholder="'+esc(opt.ph||'')+'" autocomplete="off" '+(opt.cap?'autocapitalize="'+opt.cap+'" ':'')+(opt.mode?'inputmode="'+opt.mode+'" ':'')+'enterkeyhint="done" lang="es"></div>';
+}
+function timeFld(path,label){
+ return '<div class="fld"><div class="lab">'+label+'</div><div class="tm"><input class="in" type="time" data-b="'+path+'" value="'+esc(get(path)||'')+'"><button type="button" class="btn sm" data-act="now" data-b="'+path+'">'+ico('clock',22)+' Ahora</button></div></div>';
+}
+function numFld(path,label,unit,opt={}){
+ const v=get(path)||'';
+ return '<div class="fld"><div class="lab">'+label+'</div><div class="inu"><input class="in" type="text" inputmode="'+(opt.dec?'decimal':'numeric')+'" '+(opt.dec?'data-dec':'data-int')+' data-b="'+path+'" value="'+esc(v)+'" autocomplete="off" enterkeyhint="done"><span class="u">'+unit+'</span></div></div>';
+}
+function ynFld(path,label){
+ const v=get(path);
+ return '<div class="fld"><div class="lab">'+label+'</div><div class="seg">'+
+ '<button type="button" class="ch'+(v===true?' on':'')+'" data-act="set" data-b="'+path+'" data-v="true">'+(v===true?ico('check',22):'')+'Sí</button>'+
+ '<button type="button" class="ch'+(v===false?' on':'')+'" data-act="set" data-b="'+path+'" data-v="false">'+(v===false?ico('check',22):'')+'No</button></div></div>';
+}
+function cntFld(path,label){
+ const v=get(path)||1;
+ return '<div class="fld"><div class="lab">'+label+'</div><div class="cnt"><button type="button" class="pm" data-act="cnt" data-b="'+path+'" data-d="-1" aria-label="Menos">'+ico('minus',28)+'</button><output class="cv" data-o="'+path+'">'+v+'</output><button type="button" class="pm" data-act="cnt" data-b="'+path+'" data-d="1" aria-label="Más">'+ico('plus',28)+'</button></div></div>';
+}
+function pickFld(kind,path,label,unit){
+ const v=get(path)||'';
+ const opts='<option value=""'+(v===''?' selected':'')+'>Elegir…</option>'+L[kind].map(x=>'<option value="'+x+'"'+(x===v?' selected':'')+'>'+x+LU[kind]+'</option>').join('');
+ return '<div class="fld"><div class="lab">'+label+(unit?' <span class="un">('+unit+')</span>':'')+'</div><div class="pick"><button type="button" class="pm" data-act="stp" data-b="'+path+'" data-k="'+kind+'" data-d="-1" aria-label="Bajar">'+ico('minus',28)+'</button><select class="in sel" data-b="'+path+'">'+opts+'</select><button type="button" class="pm" data-act="stp" data-b="'+path+'" data-k="'+kind+'" data-d="1" aria-label="Subir">'+ico('plus',28)+'</button></div></div>';
+}
+
+/* ========== pasos ========== */
+function sTipo(f){
+ const ts=f.flow==='lim'?['quimica','termica']:['legionella','piscina'];
+ return '<div class="stack">'+ts.map(t=>{const T=TIPOS[t],on=f.tipo===t;
+  return '<button type="button" class="tp'+(on?' on':'')+'" style="--c:'+T.c+';--ct:'+T.t+'" data-act="tipo" data-v="'+t+'"><span class="tpi">'+ico(T.icon,40)+'</span><span class="tpt"><b>'+T.label+'</b>'+(t==='legionella'?'<small>RD 487/2022</small>':'')+'</span>'+(on?ico('check',34):'')+'</button>'}).join('')+'</div>';
+}
+function sDatos(f){
+ let h=txt('ficha.instalacion','Instalación',{ph:'Nombre de la instalación',cap:'words'});
+ h+='<div class="fld"><div class="lab">Fecha</div><input class="in" type="date" data-b="ficha.fecha" value="'+esc(f.fecha||'')+'"></div>';
+ h+=timeFld('ficha.hora',f.flow==='lim'?'Hora de inicio':'Hora de la toma de muestras');
+ if(f.flow==='lim'){
+  h+=txt('ficha.responsable','Responsable',{ph:'Nombre y apellidos',cap:'words'});
+  h+=txt('ficha.telefono','Teléfono',{type:'tel',mode:'tel',ph:'600 000 000'});
+ }
+ return h+'<p class="hint">La fecha y la hora se rellenan solas; puedes cambiarlas.</p>';
+}
+function sInst(f){
+ let h='<div class="stack">'+Object.keys(INST).map(k=>{const on=f.tipoInst===k;
+  return '<button type="button" class="ch'+(on?' on':'')+'" style="justify-content:flex-start;min-height:68px;text-align:left" data-act="set" data-b="ficha.tipoInst" data-v="'+k+'">'+(on?ico('check',24):'')+'<span>'+INST[k][0]+(INST[k][1]?'<small>'+INST[k][1]+'</small>':'')+'</span></button>'}).join('')+'</div>';
+ if(f.tipoInst==='otra')h+='<div style="margin-top:20px">'+txt('ficha.tipoInstOtro','¿Qué tipo de instalación es?',{ph:'Escribe el tipo',cap:'sentences'})+'</div>';
+ return h;
+}
+/* grupos: cada grupo = cantidad + capacidad (+ material) + limpieza */
+function grpCards(f,key,mat,noun){
+ let h='';
+ f[key].forEach((g,i)=>{
+  const b='ficha.'+key+'.'+i;
+  h+='<div class="grp"><div class="grh"><span class="pn">'+(i+1)+'</span><b>Grupo '+(i+1)+'</b>'+(f[key].length>1?'<button type="button" class="ib2 bad" data-act="grpdel" data-k="'+key+'" data-i="'+i+'" aria-label="Quitar grupo '+(i+1)+'">'+ico('trash',24)+'</button>':'')+'</div>'+
+  cntFld(b+'.cant','Cantidad')+numFld(b+'.cap','Capacidad de cada uno','L')+
+  (mat?'<div class="fld"><div class="lab">Material</div><div class="grid2">'+MATS.map(m=>'<button type="button" class="ch'+(g.material===m?' on':'')+'" data-act="set" data-b="'+b+'.material" data-v="'+esc(m)+'">'+esc(m)+'</button>').join('')+'</div></div>':'')+
+  ynFld(b+'.limpieza','¿Se realiza limpieza?')+'</div>';
+ });
+ return h+'<button type="button" class="btn wide" data-act="grpadd" data-k="'+key+'">'+ico('plus',24)+' Añadir otro '+noun+' (otra capacidad)</button><p class="hint">Si hay '+noun+'s de distinta capacidad, añade un grupo por cada tamaño. Ejemplo: 1 de 80 L, 1 de 100 L y 3 de 200 L son 3 grupos.</p>';
+}
+function sDep(f){
+ let h=ynFld('ficha.deposito','¿Hay depósito de agua fría sanitaria?');
+ if(f.deposito===true)h+=grpCards(f,'deps',true,'depósito');
+ return h;
+}
+function sAcu(f){
+ let h=ynFld('ficha.acum','¿Hay acumulador de agua caliente sanitaria?');
+ if(f.acum===true)h+=grpCards(f,'acs',false,'acumulador');
+ return h;
+}
+function ptChips(tipo,p){
+ return PTDEF[tipo].filter(d=>d[0]!=='nom').map(d=>'<span><i>'+d[1]+'</i>'+esc(pv(d,p,true))+'</span>').join('');
+}
+function sPts(f){
+ if(!f.tipo)return '<div class="empty">Primero elige el tipo de trabajo en el paso 1.</div><button type="button" class="btn wide" data-act="goto" data-s="tipo">Ir al paso 1</button>';
+ let h='';
+ if(!f.puntos.length)h+='<div class="empty">Todavía no hay puntos.<br>Toca «Añadir punto».</div>';
+ f.puntos.forEach((p,i)=>{
+  h+='<div class="pc"><div class="pn">'+(i+1)+'</div><div class="pb"><b>'+esc(p.nom||'Sin nombre')+'</b><div class="vals">'+ptChips(f.tipo,p)+'</div></div><div class="pa"><button type="button" class="ib2" data-act="ptedit" data-i="'+i+'" aria-label="Editar punto '+(i+1)+'">'+ico('edit',24)+'</button><button type="button" class="ib2 bad" data-act="ptdel" data-i="'+i+'" aria-label="Borrar punto '+(i+1)+'">'+ico('trash',24)+'</button></div></div>';
+ });
+ return h+'<button type="button" class="btn pri wide" data-act="ptadd">'+ico('plus',26)+' Añadir punto</button>';
+}
+function sObs(){
+ return '<div class="fld"><div class="lab">Observaciones</div><textarea class="in ta" data-b="ficha.obs" placeholder="Escribe aquí o dicta con el micrófono del teclado" lang="es" autocapitalize="sentences">'+esc(S.ficha.obs)+'</textarea><p class="hint">Toca el micrófono de tu teclado para dictar.</p></div>';
+}
+function missing(f){
+ const m=[];
+ if(!String(f.instalacion||'').trim())m.push({t:'Falta la instalación',s:'datos'});
+ if(!f.tipo)m.push({t:'Falta elegir el tipo',s:'tipo'});
+ if(!f.puntos.length)m.push({t:'Añade al menos un punto',s:'pts'});
+ return m;
+}
+function sRes(f){
+ const m=missing(f);
+ let h='';
+ if(m.length){
+  h+='<div class="warn"><h3>'+ico('warn',26)+' Falta algo importante</h3>'+m.map(x=>'<div><span>'+x.t+'</span><button type="button" class="lnk" data-act="goto" data-s="'+x.s+'">Corregir</button></div>').join('')+'</div>';
+ }
+ return h+summaryHTML(f,true);
+}
+const ST={inst:sInst,tipo:sTipo,datos:sDatos,dep:sDep,acu:sAcu,pts:sPts,obs:sObs,res:sRes};
+
+/* ========== modelo común (resumen, texto, PDF) ========== */
+function pv(d,p,withUnit){
+ const k=d[0],unit=d[2];let v=p[k];
+ if(k==='agua')return AGUA[v]||'—';
+ if(k==='an')return anLabel(v);
+ if(v==null||v==='')return '—';
+ return withUnit&&unit?v+' '+unit:String(v);
+}
+function datosRows(f){
+ const r=[['Instalación',f.instalacion||'—']];
+ if(f.flow==='lim')r.push(['Tipo de instalación',instLabel(f)]);
+ r.push(['Fecha',fmtDate(f.fecha)],[f.flow==='lim'?'Hora de inicio':'Hora de la toma de muestras',f.hora||'—']);
+ if(f.flow==='lim'){r.push(['Responsable',f.responsable||'—']);r.push(['Teléfono',f.telefono||'—'])}
+ return r;
+}
+function grpLine(g,mat){return (g.cant||1)+' × '+(g.cap?g.cap+' L':'— L')+(mat?' · '+(g.material||'sin material'):'')+' · Limpieza: '+yn(g.limpieza)}
+function grpTxt(g,mat){return (g.cant||1)+' x '+(g.cap?g.cap+' L':'? L')+(mat?', '+(g.material||'sin material'):'')+', limpieza '+yn(g.limpieza)}
+function depRows(on,arr,mat,noun){
+ if(on!==true)return [['¿Hay '+noun+'?',yn(on)]];
+ return [['¿Hay '+noun+'?','Sí']].concat((arr||[]).map((g,i)=>['Grupo '+(i+1),grpLine(g,mat)]));
+}
+function kvHTML(rows){return '<dl class="kv">'+rows.map(r=>'<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>').join('')+'</dl>'}
+function section(title,body,step,editable){
+ return '<section class="sm"><div class="smh"><h3>'+title+'</h3>'+(editable?'<button type="button" class="lnk" data-act="goto" data-s="'+step+'">Editar</button>':'')+'</div>'+body+'</section>';
+}
+function summaryHTML(f,editable){
+ const T=TIPOS[f.tipo];
+ let h='';
+ if(T)h+='<div class="sm" style="border-color:var(--c);background:var(--ct)"><b style="color:var(--cd);font-size:1.2rem">'+esc(T.full)+'</b></div>';
+ h+=section('Datos',kvHTML(datosRows(f)),'datos',editable);
+ if(f.flow==='lim'){
+  h+=section('Depósitos de agua fría sanitaria',kvHTML(depRows(f.deposito,f.deps,true,'depósito')),'dep',editable);
+  h+=section('Acumuladores de agua caliente sanitaria',kvHTML(depRows(f.acum,f.acs,false,'acumulador')),'acu',editable);
+ }
+ let pts='';
+ if(!f.puntos.length)pts='<p class="muted" style="margin:0">Sin puntos.</p>';
+ else if(f.tipo)pts=f.puntos.map((p,i)=>{
+  const defs=PTDEF[f.tipo].filter(d=>d[0]!=='nom');
+  return '<div class="ptb"><div class="pth"><span class="pn">'+(i+1)+'</span>'+esc(p.nom||'Sin nombre')+'</div>'+kvHTML(defs.map(d=>[d[1],pv(d,p,true)]))+'</div>';
+ }).join('');
+ h+=section(f.flow==='lim'?'Mediciones por punto':'Puntos de muestreo',pts,'pts',editable);
+ h+=section('Observaciones','<div class="obs">'+(f.obs&&f.obs.trim()?esc(f.obs):'<span class="muted">Sin observaciones.</span>')+'</div>','obs',editable);
+ return h;
+}
+function textSummary(f){
+ const T=TIPOS[f.tipo]||{full:'Ficha'};
+ const L1=['KGS Soluciones - '+T.full,''];
+ datosRows(f).forEach(r=>L1.push(r[0]+': '+r[1]));
+ if(f.flow==='lim'){
+  L1.push('');
+  L1.push('Depósitos: '+(f.deposito===true?(f.deps||[]).map(g=>grpTxt(g,true)).join(' | ')||'Sí':yn(f.deposito)));
+  L1.push('Acumuladores: '+(f.acum===true?(f.acs||[]).map(g=>grpTxt(g,false)).join(' | ')||'Sí':yn(f.acum)));
+ }
+ L1.push('');L1.push(f.flow==='lim'?'Mediciones:':'Puntos:');
+ f.puntos.forEach((p,i)=>{
+  L1.push((i+1)+') '+(p.nom||'Sin nombre')+' - '+PTDEF[f.tipo].filter(d=>d[0]!=='nom').map(d=>d[1]+': '+pv(d,p,true)).join('; '));
+ });
+ if(f.obs&&f.obs.trim()){L1.push('');L1.push('Observaciones: '+f.obs.trim())}
+ L1.push('');L1.push('Técnico: Carlos Javier García (Dpto. Técnico)');
+ return L1.join('\n');
+}
+
+/* ========== vistas ========== */
+function chipHTML(t){const T=TIPOS[t];return '<span class="chip" style="--c:'+T.c+'">'+ico(T.icon,20)+'</span>'}
+function histHTML(){
+ const q=norm(S.q);
+ const arr=Object.values(fichas).filter(f=>!q||norm(f.instalacion).includes(q)).sort((a,b)=>(b.fecha+(b.hora||'')).localeCompare(a.fecha+(a.hora||''))||b.updated-a.updated);
+ if(!arr.length)return '<div class="empty">'+(Object.keys(fichas).length?'Ninguna ficha coincide con la búsqueda.':'Todavía no hay fichas guardadas.')+'</div>';
+ return arr.map(f=>{const T=TIPOS[f.tipo]||TIPOS.quimica;
+  return '<button type="button" class="item" data-act="open" data-id="'+esc(f.id)+'" style="--c:'+T.c+';--ct:'+T.t+';--cd:'+T.d+'"><span class="ib">'+ico(T.icon,26)+'</span><span class="it"><b>'+esc(f.instalacion||'Sin nombre')+'</b><span>'+fmtDate(f.fecha)+' · '+T.short+'</span></span>'+ico('right',22)+'</button>';
+ }).join('');
+}
+function vHome(){
+ const d=readDraft();
+ let dr='';
+ if(d&&d.f){const T=TIPOS[d.f.tipo];
+  dr='<div class="draft"><p><b>Ficha sin terminar</b><br>'+esc((T?T.short:d.f.flow==='lim'?'Limpieza y desinfección':'Toma de muestras')+(d.f.instalacion?' · '+d.f.instalacion:''))+'</p><div class="two"><button type="button" class="btn pri" style="--c:#8A5A00" data-act="resume">Continuar</button><button type="button" class="btn bad" data-act="discard">Descartar</button></div></div>';
+ }
+ const standalone=window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+ const hint=(!standalone&&!lsGet('kgs_hint_off'))?'<div class="draft" style="background:#E8F0FE;border-color:#1E40AF"><p><b>Úsala como una app</b><br>Toca Compartir y elige «Añadir a pantalla de inicio». Abre siempre la app desde ese icono: así tienes tus fichas ahí.</p><button type="button" class="btn" data-act="hidehint">Entendido</button></div>':'';
+ return '<header class="top"><div class="in-w"><div class="brand"><div class="bm">KGS</div><div><b>KGS Soluciones</b><span>Prevención y control de legionela</span></div></div><div class="sync" id="sync">'+syncChip()+'</div></div></header>'+
+ '<main class="pad">'+hint+
+ '<button type="button" class="big" data-act="new" data-flow="lim"><span class="chips">'+chipHTML('quimica')+chipHTML('termica')+'</span><span class="bt">Limpieza y desinfección</span>'+ico('right',30)+'</button>'+
+ '<button type="button" class="big" data-act="new" data-flow="mue"><span class="chips">'+chipHTML('legionella')+chipHTML('piscina')+'</span><span class="bt">Toma de muestras</span>'+ico('right',30)+'</button>'+
+ dr+
+ '<h2 class="sec">Historial</h2>'+
+ '<div class="search">'+ico('search',22)+'<input id="q" class="in" type="search" placeholder="Buscar instalación" value="'+esc(S.q)+'" autocomplete="off" enterkeyhint="search"></div>'+
+ '<div id="hist">'+histHTML()+'</div>'+
+ '<button type="button" class="btn wide" data-act="csv">'+ico('dl',24)+' Descargar todas las fichas (CSV)</button>'+
+ '<div class="grid2" style="margin-top:10px"><button type="button" class="btn" data-act="backup">'+ico('share',22)+' Copia de seguridad</button><button type="button" class="btn" data-act="restore">'+ico('dl',22)+' Importar copia</button></div>'+
+ '<input type="file" id="rest" accept=".json,application/json" hidden>'+
+ '<p class="hint">Las fichas se guardan en este móvil. Haz una copia de seguridad de vez en cuando.</p>'+
+ '</main>';
+}
+function vForm(){
+ const f=S.ficha,steps=STEPS[f.flow],n=steps.length,[key,title]=steps[S.step];
+ const T=TIPOS[f.tipo];
+ const bar=steps.map((s,i)=>'<i class="'+(i<=S.step?'on':'')+'"></i>').join('');
+ const last=S.step===n-1;
+ const off=key==='tipo'&&!f.tipo;
+ const nextBtn=last?'<button type="button" class="btn pri'+(missing(f).length?' off':'')+'" data-act="save">'+ico('share',24)+' Guardar y compartir</button>':'<button type="button" class="btn pri'+(off?' off':'')+'" data-act="next">Siguiente '+ico('right',24)+'</button>';
+ return '<header class="top"><div class="in-w"><div class="row"><button type="button" class="hx" data-act="exit" aria-label="Salir al inicio">'+ico('x',26)+'</button><span class="stp">Paso '+(S.step+1)+' de '+n+'</span>'+(T?'<span class="tg">'+T.label+'</span>':'')+'</div><div class="bar">'+bar+'</div><h1>'+title+'</h1></div></header>'+
+ '<main class="pad form">'+ST[key](f)+'</main>'+
+ '<nav class="nav"><button type="button" class="btn" data-act="back">'+ico('left',24)+' Atrás</button>'+nextBtn+'</nav>';
+}
+function vDetail(){
+ const f=fichas[S.id];
+ if(!f){S.view='home';return vHome()}
+ const T=TIPOS[f.tipo]||TIPOS.quimica;
+ return '<header class="top"><div class="in-w"><div class="row"><button type="button" class="hx" data-act="home" aria-label="Volver">'+ico('left',26)+'</button><span class="stp">Ficha guardada</span><span class="tg">'+T.label+'</span></div><h1 style="margin-top:8px">'+esc(f.instalacion||'Sin nombre')+'</h1></div></header>'+
+ '<main class="pad form">'+summaryHTML(f,false)+'<button type="button" class="btn bad wide" data-act="del" data-id="'+esc(f.id)+'">'+ico('trash',24)+' Borrar ficha</button></main>'+
+ '<nav class="nav"><button type="button" class="btn" data-act="edit" data-id="'+esc(f.id)+'">'+ico('edit',24)+' Editar</button><button type="button" class="btn pri" data-act="share" data-id="'+esc(f.id)+'">'+ico('share',24)+' Compartir</button></nav>';
+}
+function pdfName(f){const T=TIPOS[f.tipo];return T.file+'_'+slug(f.instalacion)+'_'+(f.fecha||todayISO())+'.pdf'}
+function vDone(){
+ const f=fichas[S.id];
+ if(!f){S.view='home';return vHome()}
+ const T=TIPOS[f.tipo];
+ const ready=!!S.pdf;
+ const state=S.pdf?'':S.pdfErr?'<div class="warn"><h3>'+ico('warn',26)+' No se pudo crear el PDF</h3><p style="margin:0 0 10px">La ficha está guardada. Comprueba la conexión e inténtalo de nuevo.</p><button type="button" class="btn wide" data-act="retrypdf">Reintentar PDF</button></div>':'<p class="center muted">Generando PDF…</p>';
+ const txt=encodeURIComponent(textSummary(f));
+ const sub=encodeURIComponent(pdfName(f).replace('.pdf',''));
+ return '<header class="top"><div class="in-w"><div class="row"><button type="button" class="hx" data-act="home" aria-label="Volver al inicio">'+ico('left',26)+'</button><span class="stp">'+(S.fromSave?'Ficha guardada':'Compartir ficha')+'</span></div><h1 style="margin-top:8px">'+esc(T.full)+'</h1></div></header>'+
+ '<main class="pad">'+
+ (S.fromSave?'<div class="ok">'+ico('check',46)+'</div><p class="center strong" style="margin:0 0 4px">Guardada en el historial</p>':'')+
+ '<p class="center muted" style="margin:0">'+esc(f.instalacion||'Sin nombre')+' · '+fmtDate(f.fecha)+'</p>'+
+ '<div class="fn">'+esc(pdfName(f))+'</div>'+state+
+ '<button type="button" class="btn pri wide'+(ready?'':' off')+'" data-act="sharepdf" style="min-height:68px">'+ico('share',26)+' Compartir PDF</button>'+
+ '<p class="hint center">Abre el menú de compartir del móvil con el PDF adjunto.</p>'+
+ '<h2 class="sec">Otras formas de enviarlo</h2>'+
+ '<div class="stack">'+
+ '<a class="btn" href="https://wa.me/?text='+txt+'" target="_blank" rel="noopener">'+ico('chat',24)+' WhatsApp (resumen en texto)</a>'+
+ '<a class="btn" href="mailto:?subject='+sub+'&body='+txt+'" target="_blank" rel="noopener">'+ico('mail',24)+' Correo (resumen en texto)</a>'+
+ '<button type="button" class="btn'+(ready?'':' off')+'" data-act="dlpdf">'+ico('dl',24)+' Descargar PDF</button>'+
+ '<button type="button" class="btn" data-act="copy">'+ico('copy',24)+' Copiar resumen</button>'+
+ '</div>'+
+ '<p class="hint">Si el correo no se abre, usa «Copiar resumen» y pégalo donde quieras.</p>'+
+ '<button type="button" class="btn wide" style="margin-top:22px" data-act="home">Volver al inicio</button>'+
+ '</main>';
+}
+
+/* ========== hoja para editar un punto ========== */
+function aguaFld(){
+ return '<div class="fld"><div class="lab">Tipo de agua</div><div class="grid2">'+
+  '<button type="button" class="ch'+(S.pt.agua==='acs'?' on':'')+'" data-act="set" data-b="pt.agua" data-v="acs">Agua caliente sanitaria</button>'+
+  '<button type="button" class="ch'+(S.pt.agua==='afch'?' on':'')+'" data-act="set" data-b="pt.agua" data-v="afch">Agua fría de consumo humano</button></div></div>';
+}
+function anFld(){
+ const a=S.pt.an||[],all=ANO.every(k=>a.includes(k));
+ const b=(k,l)=>'<button type="button" class="ch'+(a.includes(k)?' on':'')+'" data-act="tog" data-b="pt.an" data-v="'+k+'">'+(a.includes(k)?ico('check',22):'')+l+'</button>';
+ return '<div class="fld"><div class="lab">Análisis de esta muestra</div><div class="grid2">'+b('leg','Legionella')+b('aer','Aerobios')+b('fe','Hierro')+'<button type="button" class="ch'+(all?' on':'')+'" data-act="an3">'+(all?ico('check',22):'')+'Las 3</button></div><p class="hint">Marca lo que se analiza en esta botella: solo legionella, o también aerobios y hierro.</p></div>';
+}
+function sheetFields(){
+ const t=S.ficha.tipo;let h='';
+ if(t==='quimica'){
+  h+=txt('pt.nom','Nombre del punto',{ph:'Ej.: Ducha habitación 12',cap:'sentences'});
+  h+=aguaFld();
+  h+=timeFld('pt.hora','Hora de la medición');
+  h+=pickFld('cl','pt.cli','Cloro inicial','ppm')+pickFld('cl','pt.clf','Cloro final','ppm')+pickFld('ph','pt.ph','pH','')+pickFld('t','pt.temp','Temperatura','°C');
+ }else if(t==='termica'){
+  h+=txt('pt.nom','Nombre del punto',{ph:'Ej.: Ducha habitación 12',cap:'sentences'});
+  h+=timeFld('pt.hora','Hora de la medición');
+  h+=pickFld('t','pt.ti','Temperatura inicial','°C')+pickFld('t','pt.tf','Temperatura final','°C');
+ }else if(t==='legionella'){
+  h+=txt('pt.nom','Punto de muestreo',{ph:'Ej.: Retorno ACS',cap:'sentences'});
+  h+=aguaFld()+anFld();
+  h+=pickFld('t','pt.temp','Temperatura','°C')+pickFld('cl','pt.cl','Cloro','ppm')+pickFld('ph','pt.ph','pH','');
+ }else{
+  h+=txt('pt.nom','Nombre del vaso',{ph:'Ej.: Vaso grande',cap:'sentences'});
+  h+=numFld('pt.clL','Cloro libre','ppm',{dec:1})+numFld('pt.clR','Cloro residual','ppm',{dec:1})+numFld('pt.clT','Cloro total','ppm',{dec:1})+numFld('pt.ph','pH','',{dec:1})+numFld('pt.turb','Turbidez','UNF',{dec:1});
+  h+=txt('pt.transp','Transparencia',{ph:'Ej.: Total'})+numFld('pt.cya','Ácido isocianúrico','mg/L',{dec:1});
+ }
+ return h;
+}
+function renderSheet(keep){
+ const lay=$('#layer');
+ if(!S.pt){lay.innerHTML='';document.body.classList.remove('lock');return}
+ const prev=lay.querySelector('.sb'),y=prev?prev.scrollTop:0;
+ const n=(S.ptIdx>=0?S.ptIdx:S.ficha.puntos.length)+1;
+ lay.innerHTML='<div class="sheet"><header class="top"><div class="in-w"><div class="row"><button type="button" class="hx" data-act="ptcancel" aria-label="Cancelar">'+ico('x',26)+'</button><span class="stp">'+(S.ptIdx>=0?'Editar punto':'Nuevo punto')+'</span><span class="tg">'+TIPOS[S.ficha.tipo].label+'</span></div><h1 style="margin-top:8px">Punto '+n+'</h1></div></header><div class="sb"><div class="sbi">'+sheetFields()+'</div></div><nav class="nav"><button type="button" class="btn" data-act="ptcancel">Cancelar</button><button type="button" class="btn pri" data-act="ptsave">'+ico('check',24)+' Guardar punto</button></nav></div>';
+ document.body.classList.add('lock');
+ if(keep)lay.querySelector('.sb').scrollTop=y;
+}
+
+/* ========== render ========== */
+function theme(){
+ const f=curFicha(),T=f&&f.tipo?TIPOS[f.tipo]:null,r=document.documentElement.style;
+ r.setProperty('--c',T?T.c:'#0B1220');r.setProperty('--cd',T?T.d:'#0B1220');r.setProperty('--ct',T?T.t:'#E6EAF0');
+ const m=document.querySelector('meta[name=theme-color]');if(m)m.content=T?T.c:'#0B1220';
+}
+function render(keep){
+ const y=window.scrollY;
+ let h='';
+ if(S.view==='home')h=vHome();else if(S.view==='form')h=vForm();else if(S.view==='detail')h=vDetail();else h=vDone();
+ theme();
+ $('#app').innerHTML=h;
+ renderSheet(true);
+ window.scrollTo(0,keep?y:0);
+}
+function refresh(){if(S.pt){renderSheet(true)}else render(true)}
+
+/* ========== guardar, PDF y compartir ========== */
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const ps=s=>String(s==null?'':s).replace(/[—–]/g,'-').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/…/g,'...');
+let libP=null;
+function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>ko(new Error('carga '+src));document.head.appendChild(s)})}
+async function ensureLib(){
+ const ok=()=>window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API&&window.jspdf.jsPDF.API.autoTable;
+ if(ok())return;
+ if(!libP)libP=(async()=>{
+  if(!(window.jspdf&&window.jspdf.jsPDF))await loadScript('vendor/jspdf.umd.min.js');
+  if(!ok())await loadScript('vendor/jspdf.plugin.autotable.min.js');
+ })().catch(e=>{libP=null;throw e});
+ await libP;
+ if(!ok())throw new Error('PDF no disponible');
+}
+function makePDF(f){
+ const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4',compress:true});
+ const T=TIPOS[f.tipo],C=hex(T.c),TT=hex(T.t),D=hex(T.d),W=210,M=14;
+ const head=()=>{
+  doc.setFillColor(...C);doc.rect(0,0,W,5,'F');
+  doc.setTextColor(11,18,32);doc.setFont('helvetica','bold');doc.setFontSize(19);doc.text('KGS Soluciones',M,17);
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(60,70,85);
+  doc.text('Nº ROESB 1393-CV',M,22.5);
+  doc.text('C/ Nuestra Señora de Montiel, 26, 46160 Lliria (Valencia)',M,26.5);
+  doc.text('Tel. 962 764 620  ·  Móvil 617 305 308',M,30.5);
+  doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(11,18,32);
+  doc.text('Técnico: Carlos Javier García',W-M,17,{align:'right'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(60,70,85);
+  doc.text('(Dpto. Técnico)',W-M,21.5,{align:'right'});
+  doc.setDrawColor(...C);doc.setLineWidth(0.7);doc.line(M,34,W-M,34);
+ };
+ doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(...D);
+ doc.text(ps(T.full),M,43);
+ doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(60,70,85);
+ doc.text(doc.splitTextToSize(ps((f.instalacion||'Sin nombre')+'  ·  '+fmtDate(f.fecha)),W-2*M)[0],M,49.5);
+ let y=55;
+ const base={theme:'grid',margin:{top:40,left:M,right:M,bottom:18},styles:{fontSize:9.5,cellPadding:2.2,lineColor:[200,208,220],lineWidth:0.2,textColor:[11,18,32],valign:'middle'},didDrawPage:head};
+ const titleCell=(t,n)=>({content:ps(t),colSpan:n,styles:{fillColor:C,textColor:255,halign:'left',fontSize:10.5,fontStyle:'bold'}});
+ const after=()=>{y=doc.lastAutoTable.finalY+7};
+ const kv=(title,rows)=>{
+  doc.autoTable({...base,startY:y,head:[[titleCell(title,2)]],body:rows.map(r=>[ps(r[0]),ps(r[1])]),columnStyles:{0:{fontStyle:'bold',cellWidth:60,fillColor:[240,243,247]}}});after();
+ };
+ kv('Datos generales',[['Tipo de trabajo',T.full],...datosRows(f)]);
+ if(f.flow==='lim'){
+  const grpTable=(title,on,arr,mat,noun)=>{
+   if(on!==true||!(arr||[]).length){kv(title,[['¿Hay '+noun+'?',yn(on)]]);return}
+   const cols=['Grupo','Cantidad','Capacidad (L)'].concat(mat?['Material']:[]).concat(['¿Limpieza?']);
+   const hr=cols.map((c,i)=>({content:c,styles:{fillColor:TT,textColor:D,fontStyle:'bold',halign:i===3&&mat?'left':'center',fontSize:9}}));
+   const bd=arr.map((g,i)=>[String(i+1),String(g.cant||1),ps(g.cap||'-')].concat(mat?[ps(g.material||'-')]:[]).concat([ps(yn(g.limpieza))]));
+   const cs={0:{cellWidth:18,halign:'center'},1:{halign:'center'},2:{halign:'center'}};
+   cs[cols.length-1]={halign:'center'};
+   doc.autoTable({...base,startY:y,head:[[titleCell(title,cols.length)],hr],body:bd,columnStyles:cs});after();
+  };
+  grpTable('Depósitos de agua fría sanitaria',f.deposito,f.deps,true,'depósito');
+  grpTable('Acumuladores de agua caliente sanitaria',f.acum,f.acs,false,'acumulador');
+ }
+ const defs=PTDEF[f.tipo];
+ const cols=[['Nº','']].concat(defs.map(d=>[d[1],d[0]==='agua'?'':d[2]]));
+ const leftK=k=>k==='nom'||k==='agua'||k==='an';
+ const headRow=cols.map((c,i)=>({content:ps(c[0]+(c[1]?'\n('+c[1]+')':'')),styles:{fillColor:TT,textColor:D,fontStyle:'bold',halign:i===0?'center':leftK(defs[i-1][0])?'left':'center',fontSize:8.5}}));
+ const body=f.puntos.map((p,i)=>[String(i+1)].concat(defs.map(d=>ps(pv(d,p,false)))));
+ const cs={0:{cellWidth:9,halign:'center'}};
+ defs.forEach((d,i)=>{if(!leftK(d[0]))cs[i+1]={halign:'center'}});
+ doc.autoTable({...base,startY:y,head:[[titleCell(f.flow==='lim'?'Mediciones por punto':'Puntos de muestreo',cols.length)],headRow],body,columnStyles:cs,styles:{...base.styles,fontSize:f.tipo==='piscina'?8.5:9.5,cellPadding:f.tipo==='piscina'?1.8:2.2}});after();
+ doc.autoTable({...base,startY:y,head:[[titleCell('Observaciones',1)]],body:[[ps(f.obs&&f.obs.trim()?f.obs.trim():'Sin observaciones.')]]});
+ const n=doc.getNumberOfPages(),stamp=fmtDate(todayISO())+' '+nowHM();
+ for(let i=1;i<=n;i++){
+  doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(110,120,135);
+  doc.text('KGS Soluciones  ·  Nº ROESB 1393-CV  ·  Informe generado el '+stamp,M,289);
+  doc.text('Página '+i+' de '+n,W-M,289,{align:'right'});
+ }
+ return doc.output('blob');
+}
+async function genPDF(f){
+ S.pdf=null;S.pdfErr=false;
+ try{await ensureLib();S.pdf={blob:makePDF(f),name:pdfName(f),id:f.id}}
+ catch(e){console.warn(e);S.pdfErr=true}
+ if(S.view==='done'&&S.id===f.id)render(true);
+}
+async function finishSave(){
+ const f=S.ficha;
+ if(missing(f).length){toast('Faltan datos importantes: revisa el aviso en rojo');window.scrollTo(0,0);return}
+ f.instalacion=f.instalacion.trim();
+ saveFicha(f);clearDraft();
+ S.id=f.id;S.ficha=null;S.pt=null;S.view='done';S.fromSave=true;
+ render();
+ await genPDF(fichas[S.id]);
+}
+async function dlPDF(){
+ const p=S.pdf;if(!p){toast('El PDF aún no está listo');return}
+ downloadBlob(p.name,p.blob);
+}
+async function sharePDF(){
+ const p=S.pdf;if(!p){toast('El PDF aún no está listo');return}
+ if(await shareFile(p.name,p.blob,'application/pdf'))return;
+ downloadBlob(p.name,p.blob);
+ toast('Este navegador no abre el menú de compartir: he descargado el PDF.');
+}
+async function copyText(t){
+ try{await navigator.clipboard.writeText(t);toast('Resumen copiado');return}catch(e){}
+ await dialog({title:'Copiar resumen',html:'<textarea readonly id="cp">'+esc(t)+'</textarea>',btns:[{l:'Cerrar',v:1}]});
+}
+function csvAll(){
+ const H=['ID','Trabajo','Instalación','Tipo de instalación','Fecha','Hora','Responsable','Teléfono','Depósito','Depósitos (detalle)','Acumulador','Acumuladores (detalle)','Nº punto','Punto','Tipo de agua','Análisis','Hora medición','Cloro inicial (ppm)','Cloro final (ppm)','pH','Temperatura (°C)','Temperatura inicial (°C)','Temperatura final (°C)','Cloro (ppm)','Cloro libre (ppm)','Cloro residual (ppm)','Cloro total (ppm)','Turbidez (UNF)','Transparencia','Ácido isocianúrico (mg/L)','Observaciones'];
+ const MAP={
+  quimica:{nom:'Punto',agua:'Tipo de agua',hora:'Hora medición',cli:'Cloro inicial (ppm)',clf:'Cloro final (ppm)',ph:'pH',temp:'Temperatura (°C)'},
+  termica:{nom:'Punto',hora:'Hora medición',ti:'Temperatura inicial (°C)',tf:'Temperatura final (°C)'},
+  legionella:{nom:'Punto',agua:'Tipo de agua',an:'Análisis',temp:'Temperatura (°C)',cl:'Cloro (ppm)',ph:'pH'},
+  piscina:{nom:'Punto',clL:'Cloro libre (ppm)',clR:'Cloro residual (ppm)',clT:'Cloro total (ppm)',ph:'pH',turb:'Turbidez (UNF)',transp:'Transparencia',cya:'Ácido isocianúrico (mg/L)'}
+ };
+ const q=v=>{v=String(v==null?'':v);return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+ const rows=[H];
+ Object.values(fichas).sort((a,b)=>(a.fecha+(a.hora||'')).localeCompare(b.fecha+(b.hora||''))).forEach(f=>{
+  const T=TIPOS[f.tipo]||{short:''};
+  const lim=f.flow==='lim';
+  const baseR={ID:f.id,Trabajo:T.short,'Instalación':f.instalacion,'Tipo de instalación':lim?instLabel(f):'',Fecha:fmtDate(f.fecha),Hora:f.hora,Responsable:lim?f.responsable:'','Teléfono':lim?f.telefono:'',Observaciones:f.obs};
+  if(lim){
+   baseR['Depósito']=yn(f.deposito);
+   if(f.deposito===true)baseR['Depósitos (detalle)']=(f.deps||[]).map(g=>grpTxt(g,true)).join(' | ');
+   baseR['Acumulador']=yn(f.acum);
+   if(f.acum===true)baseR['Acumuladores (detalle)']=(f.acs||[]).map(g=>grpTxt(g,false)).join(' | ');
+  }
+  const list=f.puntos.length?f.puntos:[null];
+  list.forEach((p,i)=>{
+   const r=Object.assign({},baseR);
+   if(p){r['Nº punto']=i+1;const m=MAP[f.tipo]||{};Object.keys(m).forEach(k=>{r[m[k]]=k==='agua'?(AGUA[p[k]]||''):k==='an'?(Array.isArray(p[k])?anLabel(p[k]).replace('—',''):''):p[k]})}
+   rows.push(H.map(h=>q(r[h])));
+  });
+ });
+ return '﻿'+rows.map(r=>Array.isArray(r)?r.join(';'):r.map(q).join(';')).join('\r\n');
+}
+
+/* ========== acciones ========== */
+function startForm(f,step){S.ficha=f;S.step=step;S.pt=null;S.ptIdx=-1;S.view='form';saveDraft();render()}
+async function ensureNoDraft(){
+ const d=readDraft();
+ if(!d||!d.f)return true;
+ const r=await dialog({title:'Tienes una ficha sin terminar',text:'¿Qué quieres hacer con ella?',btns:[{l:'Continuar la anterior',v:'c',cls:'pri'},{l:'Descartarla y seguir',v:'d',cls:'bad'},{l:'Cancelar',v:'x'}]});
+ if(r==='c'){resumeDraft();return false}
+ if(r==='d'){clearDraft();return true}
+ return false;
+}
+function resumeDraft(){
+ const d=readDraft();if(!d)return;
+ S.ficha=normF(d.f);S.step=Math.min(d.step||0,STEPS[d.f.flow].length-1);S.pt=d.pt||null;S.ptIdx=d.ptIdx==null?-1:d.ptIdx;S.view='form';render();
+}
+const parseV=v=>v==='true'?true:v==='false'?false:v;
+const acts={
+ async new(el){if(!(await ensureNoDraft()))return;startForm(newFicha(el.dataset.flow),0)},
+ resume(){resumeDraft()},
+ async discard(){if(await confirmBox('¿Descartar la ficha sin terminar?','Se perderán los datos que no hayas guardado.','Descartar')){clearDraft();render(true)}},
+ tipo(el){S.ficha.tipo=el.dataset.v;saveDraft();render(true)},
+ set(el){
+  set(el.dataset.b,parseV(el.dataset.v));
+  const f=S.ficha;
+  if(f&&el.dataset.b==='ficha.deposito'&&f.deposito===true&&!f.deps.length)f.deps.push({cant:1,cap:'',material:null,limpieza:null});
+  if(f&&el.dataset.b==='ficha.acum'&&f.acum===true&&!f.acs.length)f.acs.push({cant:1,cap:'',limpieza:null});
+  touchDraft();refresh();
+ },
+ tog(el){
+  const a=(get(el.dataset.b)||[]).slice(),v=el.dataset.v,i=a.indexOf(v);
+  if(i>=0)a.splice(i,1);else a.push(v);
+  set(el.dataset.b,ANO.filter(k=>a.includes(k)));touchDraft();refresh();
+ },
+ an3(){set('pt.an',ANO.slice());touchDraft();refresh()},
+ grpadd(el){const k=el.dataset.k;S.ficha[k].push(k==='deps'?{cant:1,cap:'',material:null,limpieza:null}:{cant:1,cap:'',limpieza:null});saveDraft();render(true)},
+ async grpdel(el){
+  const k=el.dataset.k,i=+el.dataset.i;
+  if(await confirmBox('¿Quitar el grupo '+(i+1)+'?','Se borrarán sus datos.','Quitar grupo')){S.ficha[k].splice(i,1);saveDraft();render(true)}
+ },
+ stp(el){
+  const k=el.dataset.k,list=L[k],cur=get(el.dataset.b)||'';let i=list.indexOf(cur);
+  if(i<0)i=list.indexOf(LDEF[k]);else i=Math.max(0,Math.min(list.length-1,i+(+el.dataset.d)));
+  const v=list[i];set(el.dataset.b,v);
+  const sel=document.querySelector('select[data-b="'+el.dataset.b+'"]');if(sel)sel.value=v;
+  touchDraft();
+ },
+ cnt(el){
+  const p=el.dataset.b,v=Math.max(1,Math.min(99,(+get(p)||1)+(+el.dataset.d)));set(p,v);
+  const o=document.querySelector('output[data-o="'+p+'"]');if(o)o.textContent=v;touchDraft();
+ },
+ now(el){const v=nowHM();set(el.dataset.b,v);const i=document.querySelector('input[data-b="'+el.dataset.b+'"]');if(i)i.value=v;touchDraft()},
+ goto(el){const i=STEPS[S.ficha.flow].findIndex(s=>s[0]===el.dataset.s);if(i>=0){S.step=i;if(S.pt){S.pt=null;S.ptIdx=-1}saveDraft();render()}},
+ next(){
+  const f=S.ficha;
+  if(STEPS[f.flow][S.step][0]==='tipo'&&!f.tipo){toast('Elige un tipo para continuar');return}
+  S.step++;saveDraft();render();
+ },
+ back(){if(S.step===0){acts.exit();return}S.step--;saveDraft();render()},
+ exit(){saveDraft();S.view='home';S.ficha=null;S.pt=null;render()},
+ ptadd(){S.pt=newPunto(S.ficha.tipo);S.ptIdx=-1;saveDraft();renderSheet()},
+ ptedit(el){S.ptIdx=+el.dataset.i;S.pt=clone(S.ficha.puntos[S.ptIdx]);saveDraft();renderSheet()},
+ async ptdel(el){const i=+el.dataset.i;if(await confirmBox('¿Borrar el punto '+(i+1)+'?',(S.ficha.puntos[i].nom||'Sin nombre'),'Borrar punto')){S.ficha.puntos.splice(i,1);saveDraft();render(true)}},
+ ptsave(){
+  if(S.ptIdx>=0)S.ficha.puntos[S.ptIdx]=clone(S.pt);else S.ficha.puntos.push(clone(S.pt));
+  S.pt=null;S.ptIdx=-1;saveDraft();render(true);
+ },
+ ptcancel(){S.pt=null;S.ptIdx=-1;saveDraft();renderSheet()},
+ save(){finishSave()},
+ open(el){S.id=el.dataset.id;S.view='detail';render()},
+ async edit(el){
+  if(!(await ensureNoDraft()))return;
+  const f=clone(fichas[el.dataset.id]);startForm(f,STEPS[f.flow].length-1);
+ },
+ async del(el){if(await confirmBox('¿Borrar esta ficha?','Se eliminará del historial y no se podrá recuperar.','Borrar ficha')){deleteFicha(el.dataset.id);S.view='home';render();toast('Ficha borrada')}},
+ share(el){S.id=el.dataset.id;S.fromSave=false;S.view='done';render();genPDF(fichas[S.id])},
+ sharepdf(){sharePDF()},
+ dlpdf(){dlPDF()},
+ retrypdf(){S.pdfErr=false;render(true);genPDF(fichas[S.id])},
+ copy(){copyText(textSummary(fichas[S.id]))},
+ home(){S.view='home';S.ficha=null;S.pt=null;S.id=null;render()},
+ csv(){
+  if(!Object.keys(fichas).length){toast('Todavía no hay fichas que descargar');return}
+  downloadBlob('Fichas_KGS_'+todayISO()+'.csv',new Blob([csvAll()],{type:'text/csv;charset=utf-8'}));
+ },
+ async backup(){
+  if(!Object.keys(fichas).length){toast('Todavía no hay fichas que guardar');return}
+  const name='KGS_copia_seguridad_'+todayISO()+'.json';
+  const blob=new Blob([JSON.stringify({app:'kgs-fichas',v:1,fecha:new Date().toISOString(),fichas:Object.values(fichas)})],{type:'application/json'});
+  if(await shareFile(name,blob,'application/json'))return;
+  downloadBlob(name,blob);
+ },
+ restore(){const i=$('#rest');if(i)i.click()},
+ hidehint(){lsSet('kgs_hint_off',1);render(true)}
+};
+document.addEventListener('click',e=>{
+ const el=e.target.closest('[data-act]');
+ if(!el||el.closest('.ov'))return;
+ const fn=acts[el.dataset.act];
+ if(fn){const r=fn(el);if(r&&r.catch)r.catch(x=>console.warn(x))}
+});
+async function importFile(file){
+ if(!file)return;
+ try{
+  const j=JSON.parse(await file.text());
+  const arr=Array.isArray(j)?j:Array.isArray(j.fichas)?j.fichas:[];
+  let n=0;
+  arr.forEach(x=>{
+   if(!x||!x.id||!x.flow||!TIPOS[x.tipo])return;
+   const f=normF(x);
+   if(!fichas[f.id]||(f.updated||0)>(fichas[f.id].updated||0)){fichas[f.id]=f;n++}
+  });
+  persistLocal();
+  const h=$('#hist');if(h)h.innerHTML=histHTML();
+  toast(n?'Fichas importadas: '+n:'No había fichas nuevas en ese archivo');
+ }catch(e){toast('No se pudo leer ese archivo')}
+}
+function onField(e){
+ const t=e.target;
+ if(t.id==='rest'){importFile(t.files&&t.files[0]);t.value='';return}
+ if(t.id==='q'){S.q=t.value;const h=$('#hist');if(h)h.innerHTML=histHTML();return}
+ const p=t.dataset&&t.dataset.b;if(!p||t.tagName==='BUTTON')return;
+ let v=t.value;
+ if('dec' in t.dataset){
+  v=v.replace(/\./g,',').replace(/[^0-9,]/g,'');
+  const i=v.indexOf(',');if(i>=0)v=v.slice(0,i+1)+v.slice(i+1).replace(/,/g,'');
+  if(v!==t.value)t.value=v;
+ }
+ if('int' in t.dataset){v=v.replace(/\D/g,'');if(v!==t.value)t.value=v}
+ set(p,v);touchDraft();
+}
+document.addEventListener('input',onField);
+document.addEventListener('change',onField);
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='search')e.target.blur()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveDraft()});
+window.addEventListener('pagehide',saveDraft);
+
+/* ========== arranque ========== */
+(function init(){
+ const f=lsGet(LS_F);if(f&&typeof f==='object'&&!Array.isArray(f)){fichas=f;Object.values(fichas).forEach(normF)}
+ render();
+ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+ try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+ window.__kgs={S,acts,get fichas(){return fichas},csvAll,makePDF,ensureLib,textSummary,missing};
+})();
+})();
+</script>
+</body>
+</html>
