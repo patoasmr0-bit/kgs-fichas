@@ -216,13 +216,15 @@ const instLabel=f=>!f.tipoInst||!INST[f.tipoInst]?'—':f.tipoInst==='otra'?(f.t
 const MATS=['Poliéster / fibra','Acero inoxidable','Acero galvanizado','Polietileno','Hormigón','Otro'];
 /* [clave, etiqueta, unidad] */
 const PTDEF={
- quimica:[['nom','Punto',''],['agua','Tipo de agua',''],['hora','Hora',''],['cli','Cloro inicial','ppm'],['clf','Cloro final','ppm'],['ph','pH',''],['temp','Temperatura','°C']],
+ quimica:[['nom','Punto',''],['agua','Tipo de agua',''],['hora','Hora',''],['cli','Cloro inicial','ppm'],['ph','pH',''],['temp','Temperatura','°C'],['clf','Cloro final','ppm']],
  termica:[['nom','Punto',''],['hora','Hora',''],['ti','Temp. inicial','°C'],['tf','Temp. final','°C']],
  legionella:[['nom','Punto de muestreo',''],['agua','Tipo de agua',''],['an','Análisis',''],['temp','Temperatura','°C'],['cl','Cloro','ppm'],['ph','pH','']],
  piscina:[['nom','Vaso',''],['clL','Cloro libre','ppm'],['clR','Cloro residual','ppm'],['clT','Cloro total','ppm'],['ph','pH',''],['turb','Turbidez','UNF'],['transp','Transparencia',''],['cya','Ácido isocianúrico','mg/L']]
 };
 const L={cl:[],ph:[],t:[]};
-for(let i=0;i<=60;i++)L.cl.push((i/2).toFixed(1).replace('.',','));
+L.cl.push('0,0');
+for(let i=1;i<=25;i++)L.cl.push((i/5).toFixed(1).replace('.',','));   /* 0,2 en 0,2 hasta 5,0 */
+for(let i=11;i<=60;i++)L.cl.push((i/2).toFixed(1).replace('.',','));  /* 0,5 en 0,5 hasta 30,0 */
 for(let i=60;i<=90;i++)L.ph.push((i/10).toFixed(1).replace('.',','));
 for(let i=0;i<=80;i++)L.t.push(String(i));
 const LU={cl:' ppm',ph:'',t:' °C'};
@@ -328,7 +330,8 @@ function cntFld(path,label){
 }
 function pickFld(kind,path,label,unit){
  const v=get(path)||'';
- const opts='<option value=""'+(v===''?' selected':'')+'>Elegir…</option>'+L[kind].map(x=>'<option value="'+x+'"'+(x===v?' selected':'')+'>'+x+LU[kind]+'</option>').join('');
+ const lst=(v&&!L[kind].includes(v))?L[kind].concat([v]):L[kind]; /* valor antiguo que ya no está en la lista: se conserva */
+ const opts='<option value=""'+(v===''?' selected':'')+'>Elegir…</option>'+lst.map(x=>'<option value="'+x+'"'+(x===v?' selected':'')+'>'+x+LU[kind]+'</option>').join('');
  return '<div class="fld"><div class="lab">'+label+(unit?' <span class="un">('+unit+')</span>':'')+'</div><div class="pick"><button type="button" class="pm" data-act="stp" data-b="'+path+'" data-k="'+kind+'" data-d="-1" aria-label="Bajar">'+ico('minus',28)+'</button><select class="in sel" data-b="'+path+'">'+opts+'</select><button type="button" class="pm" data-act="stp" data-b="'+path+'" data-k="'+kind+'" data-d="1" aria-label="Subir">'+ico('plus',28)+'</button></div></div>';
 }
 
@@ -566,7 +569,7 @@ function sheetFields(){
   h+=txt('pt.nom','Nombre del punto',{ph:'Ej.: Ducha habitación 12',cap:'sentences'});
   h+=aguaFld();
   h+=timeFld('pt.hora','Hora de la medición');
-  h+=pickFld('cl','pt.cli','Cloro inicial','ppm')+pickFld('cl','pt.clf','Cloro final','ppm')+pickFld('ph','pt.ph','pH','')+pickFld('t','pt.temp','Temperatura','°C');
+  h+=pickFld('cl','pt.cli','Cloro inicial','ppm')+pickFld('ph','pt.ph','pH','')+pickFld('t','pt.temp','Temperatura','°C')+pickFld('cl','pt.clf','Cloro final','ppm');
  }else if(t==='termica'){
   h+=txt('pt.nom','Nombre del punto',{ph:'Ej.: Ducha habitación 12',cap:'sentences'});
   h+=timeFld('pt.hora','Hora de la medición');
