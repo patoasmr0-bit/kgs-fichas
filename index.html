@@ -218,12 +218,14 @@ const STEPS={
  mue:[['tipo','Tipo de muestreo'],['datos','Datos de la instalación'],['pts','Puntos de muestreo'],['obs','Observaciones'],['res','Resumen']]
 };
 const AGUA={acs:'Agua caliente sanitaria',afch:'Agua fría de consumo humano'};
-const ANL={leg:'Legionella',aer:'Aerobios',fe:'Hierro'};
+const ANL={leg:'Legionella',aer:'Aerobios',fe:'Hierro',ent:'Enterobacterias',lis:'Listeria'};
 const TRANSP={buena:'Buena',regular:'Regular',mala:'Mala'};
 const toN=v=>{const n=parseFloat(String(v==null?'':v).replace(',','.'));return isNaN(n)?null:n};
 function sumCl(p){const a=toN(p.clL),b=toN(p.clR);if(a===null&&b===null)return '';return String(Math.round(((a||0)+(b||0))*100)/100).replace('.',',')}
 const ANO=['leg','aer','fe'];
-const anLabel=a=>Array.isArray(a)&&a.length?ANO.filter(k=>a.includes(k)).map(k=>ANL[k]).join(', '):'—';
+const ANS=['aer','ent','lis'];
+const ANA=['leg','aer','fe','ent','lis'];
+const anLabel=a=>Array.isArray(a)&&a.length?ANA.filter(k=>a.includes(k)).map(k=>ANL[k]).join(', '):'—';
 const INST={sanitaria:['Agua sanitaria',''],incendios:['Circuito contra incendios',''],riego:['Riego por aspersión',''],lavadero:['Lavadero de vehículos',''],clinica:['Clínica dental',''],otra:['Otra','']};
 const INST_T={incendios:['quimica'],riego:['quimica'],clinica:['quimica']};
 const instTipos=f=>INST_T[f.tipoInst]||['quimica','termica'];
@@ -234,8 +236,8 @@ const PTDEF={
  quimica:[['nom','Punto',''],['agua','Tipo de agua',''],['hora','Hora',''],['cli','Cloro inicial','ppm'],['ph','pH',''],['temp','Temperatura','°C'],['clf','Cloro final','ppm']],
  termica:[['nom','Punto',''],['hora','Hora',''],['ti','Temp. inicial','°C'],['tf','Temp. final','°C']],
  legionella:[['nom','Punto de muestreo',''],['agua','Tipo de agua',''],['an','Análisis',''],['temp','Temperatura','°C'],['cl','Cloro','ppm'],['ph','pH','']],
- superficies:[['nom','Punto de toma',''],['p1','Parámetro 1',''],['p2','Parámetro 2',''],['p3','Parámetro 3','']],
- otras:[['nom','Punto de toma',''],['p1','Parámetro','']],
+ superficies:[['nom','Punto de toma',''],['an','Análisis','']],
+ otras:[['nom','Punto de muestreo',''],['ta','Tipo de análisis',''],['p1','Parámetro 1',''],['p2','Parámetro 2','']],
  piscina:[['nom','Vaso',''],['clL','Cloro libre','ppm'],['clR','Cloro residual','ppm'],['clT','Cloro total','ppm'],['ph','pH',''],['turb','Turbidez','UNF'],['transp','Transparencia',''],['cya','Ácido isocianúrico','mg/L']]
 };
 const L={cl:[],ph:[],t:[]};
@@ -273,8 +275,8 @@ function newPunto(tipo){
  if(tipo==='quimica')return{nom:'',agua:null,hora:nowHM(),cli:'',clf:'',ph:'',temp:''};
  if(tipo==='termica')return{nom:'',hora:nowHM(),ti:'',tf:''};
  if(tipo==='legionella')return{nom:'',agua:null,an:['leg'],temp:'',cl:'',ph:''};
- if(tipo==='superficies')return{nom:'',p1n:'',p1v:'',p2n:'',p2v:'',p3n:'',p3v:''};
- if(tipo==='otras')return{nom:'',p1n:'',p1v:''};
+ if(tipo==='superficies')return{nom:'',an:[]};
+ if(tipo==='otras')return{nom:'',ta:'',p1n:'',p1v:'',p2n:'',p2v:''};
  return{nom:'',clL:'',clR:'',clT:'',ph:'',turb:'',transp:'',cya:''};
 }
 const root=()=>({ficha:S.ficha,pt:S.pt});
@@ -439,7 +441,7 @@ function pv(d,p,withUnit){
  const k=d[0],unit=d[2];let v=p[k];
  if(k==='agua')return AGUA[v]||'—';
  if(k==='an')return anLabel(v);
- if(/^p[1-3]$/.test(k)){const n=String(p[k+'n']||'').trim(),w=String(p[k+'v']||'').trim();return !n&&!w?'—':(n||'Parámetro')+': '+(w||'—')}
+ if(/^p[1-2]$/.test(k)){const n=String(p[k+'n']||'').trim(),w=String(p[k+'v']||'').trim();return !n&&!w?'—':(n||'Parámetro')+': '+(w||'—')}
  if(k==='transp')return TRANSP[v]||(v==null||v===''?'—':String(v));
  if(v==null||v==='')return '—';
  return withUnit&&unit?v+' '+unit:String(v);
@@ -587,9 +589,9 @@ function aguaFld(){
   '<button type="button" class="ch'+(S.pt.agua==='afch'?' on':'')+'" data-act="set" data-b="pt.agua" data-v="afch">Agua fría de consumo humano</button></div></div>';
 }
 function anFld(){
- const a=S.pt.an||[],all=ANO.every(k=>a.includes(k));
- const b=(k,l)=>'<button type="button" class="ch'+(a.includes(k)?' on':'')+'" data-act="tog" data-b="pt.an" data-v="'+k+'">'+(a.includes(k)?ico('check',22):'')+l+'</button>';
- return '<div class="fld"><div class="lab">Análisis de esta muestra</div><div class="grid2">'+b('leg','Legionella')+b('aer','Aerobios')+b('fe','Hierro')+'<button type="button" class="ch'+(all?' on':'')+'" data-act="an3">'+(all?ico('check',22):'')+'Las 3</button></div><p class="hint">Marca lo que se analiza en esta botella: solo legionella, o también aerobios y hierro.</p></div>';
+ const sup=S.ficha.tipo==='superficies',opts=sup?ANS:ANO,a=S.pt.an||[],all=opts.every(k=>a.includes(k));
+ const b=k=>'<button type="button" class="ch'+(a.includes(k)?' on':'')+'" data-act="tog" data-b="pt.an" data-v="'+k+'">'+(a.includes(k)?ico('check',22):'')+ANL[k]+'</button>';
+ return '<div class="fld"><div class="lab">Análisis de esta muestra</div><div class="grid2">'+opts.map(b).join('')+'<button type="button" class="ch'+(all?' on':'')+'" data-act="an3">'+(all?ico('check',22):'')+(sup?'Todos':'Las 3')+'</button></div>'+(sup?'<p class="hint">Marca lo que se analiza en esta muestra.</p>':'<p class="hint">Marca lo que se analiza en esta botella: solo legionella, o también aerobios y hierro.</p>')+'</div>';
 }
 function transpFld(){
  const v=S.pt.transp,b=(k,l)=>'<button type="button" class="ch'+(v===k?' on':'')+'" data-act="set" data-b="pt.transp" data-v="'+k+'">'+(v===k?ico('check',20):'')+l+'</button>';
@@ -610,11 +612,14 @@ function sheetFields(){
   h+=txt('pt.nom','Punto de muestreo',{ph:'Ej.: Retorno ACS',cap:'sentences'});
   h+=aguaFld()+anFld();
   h+=pickFld('t','pt.temp','Temperatura','°C')+pickFld('cl','pt.cl','Cloro','ppm')+pickFld('ph','pt.ph','pH','');
- }else if(t==='superficies'||t==='otras'){
+ }else if(t==='superficies'){
   h+=txt('pt.nom','Punto de toma',{ph:'Ej.: Mesa de trabajo',cap:'sentences'});
-  const n=t==='superficies'?3:1;
-  for(let i=1;i<=n;i++){
-   h+='<div class="fld" style="border-top:2px solid var(--line);padding-top:14px;margin-top:6px"><div class="lab">'+(n>1?'Parámetro '+i:'Parámetro')+'</div></div>'+txt('pt.p'+i+'n','Qué se mide',{ph:'Ej.: ATP, pH, temperatura',cap:'sentences'})+txt('pt.p'+i+'v','Valor',{ph:'Ej.: 12 RLU'});
+  h+=anFld();
+ }else if(t==='otras'){
+  h+=txt('pt.nom','Punto de muestreo',{ph:'Ej.: Torre de refrigeración',cap:'sentences'});
+  h+=txt('pt.ta','Tipo de análisis',{ph:'Escribe el tipo de análisis',cap:'sentences'});
+  for(let i=1;i<=2;i++){
+   h+='<div class="fld" style="border-top:2px solid var(--line);padding-top:14px;margin-top:6px"><div class="lab">Parámetro '+i+'</div></div>'+txt('pt.p'+i+'n','Qué se mide',{ph:'Ej.: pH, temperatura',cap:'sentences'})+txt('pt.p'+i+'v','Valor',{ph:'Ej.: 7,2'});
   }
  }else{
   h+=txt('pt.nom','Nombre del vaso',{ph:'Ej.: Vaso grande',cap:'sentences'});
@@ -711,7 +716,7 @@ function makePDF(f){
  }
  const defs=PTDEF[f.tipo];
  const cols=[['Nº','']].concat(defs.map(d=>[d[1],d[0]==='agua'?'':d[2]]));
- const leftK=k=>k==='nom'||k==='agua'||k==='an'||/^p[1-3]$/.test(k);
+ const leftK=k=>k==='nom'||k==='agua'||k==='an'||/^p[1-3]$/.test(k)||k==='ta';
  const headRow=cols.map((c,i)=>({content:ps(c[0]+(c[1]?'\n('+c[1]+')':'')),styles:{fillColor:TT,textColor:D,fontStyle:'bold',halign:i===0?'center':leftK(defs[i-1][0])?'left':'center',fontSize:8.5}}));
  const body=f.puntos.map((p,i)=>[String(i+1)].concat(defs.map(d=>ps(pv(d,p,false)))));
  const cs={0:{cellWidth:9,halign:'center'}};
@@ -756,13 +761,13 @@ async function copyText(t){
  await dialog({title:'Copiar resumen',html:'<textarea readonly id="cp">'+esc(t)+'</textarea>',btns:[{l:'Cerrar',v:1}]});
 }
 function csvAll(){
- const H=['ID','Trabajo','Instalación','Tipo de instalación','Fecha','Hora','Responsable','Teléfono','Depósito','Depósitos (detalle)','Acumulador','Acumuladores (detalle)','Nº punto','Punto','Tipo de agua','Análisis','Hora medición','Cloro inicial (ppm)','Cloro final (ppm)','pH','Temperatura (°C)','Temperatura inicial (°C)','Temperatura final (°C)','Cloro (ppm)','Cloro libre (ppm)','Cloro residual (ppm)','Cloro total (ppm)','Turbidez (UNF)','Transparencia','Ácido isocianúrico (mg/L)','Parámetro 1','Parámetro 2','Parámetro 3','Observaciones'];
+ const H=['ID','Trabajo','Instalación','Tipo de instalación','Fecha','Hora','Responsable','Teléfono','Depósito','Depósitos (detalle)','Acumulador','Acumuladores (detalle)','Nº punto','Punto','Tipo de agua','Análisis','Hora medición','Cloro inicial (ppm)','Cloro final (ppm)','pH','Temperatura (°C)','Temperatura inicial (°C)','Temperatura final (°C)','Cloro (ppm)','Cloro libre (ppm)','Cloro residual (ppm)','Cloro total (ppm)','Turbidez (UNF)','Transparencia','Ácido isocianúrico (mg/L)','Parámetro 1','Parámetro 2','Observaciones'];
  const MAP={
   quimica:{nom:'Punto',agua:'Tipo de agua',hora:'Hora medición',cli:'Cloro inicial (ppm)',clf:'Cloro final (ppm)',ph:'pH',temp:'Temperatura (°C)'},
   termica:{nom:'Punto',hora:'Hora medición',ti:'Temperatura inicial (°C)',tf:'Temperatura final (°C)'},
   legionella:{nom:'Punto',agua:'Tipo de agua',an:'Análisis',temp:'Temperatura (°C)',cl:'Cloro (ppm)',ph:'pH'},
-  superficies:{nom:'Punto',p1:'Parámetro 1',p2:'Parámetro 2',p3:'Parámetro 3'},
-  otras:{nom:'Punto',p1:'Parámetro 1'},
+  superficies:{nom:'Punto',an:'Análisis'},
+  otras:{nom:'Punto',ta:'Análisis',p1:'Parámetro 1',p2:'Parámetro 2'},
   piscina:{nom:'Punto',clL:'Cloro libre (ppm)',clR:'Cloro residual (ppm)',clT:'Cloro total (ppm)',ph:'pH',turb:'Turbidez (UNF)',transp:'Transparencia',cya:'Ácido isocianúrico (mg/L)'}
  };
  const q=v=>{v=String(v==null?'':v);return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
@@ -780,7 +785,7 @@ function csvAll(){
   const list=f.puntos.length?f.puntos:[null];
   list.forEach((p,i)=>{
    const r=Object.assign({},baseR);
-   if(p){r['Nº punto']=i+1;const m=MAP[f.tipo]||{};Object.keys(m).forEach(k=>{r[m[k]]=k==='agua'?(AGUA[p[k]]||''):k==='an'?(Array.isArray(p[k])?anLabel(p[k]).replace('—',''):''):k==='transp'?(TRANSP[p[k]]||p[k]):/^p[1-3]$/.test(k)?pv([k,'',''],p).replace(/^—$/,''):p[k]})}
+   if(p){r['Nº punto']=i+1;const m=MAP[f.tipo]||{};Object.keys(m).forEach(k=>{r[m[k]]=k==='agua'?(AGUA[p[k]]||''):k==='an'?(Array.isArray(p[k])?anLabel(p[k]).replace('—',''):''):k==='transp'?(TRANSP[p[k]]||p[k]):/^p[1-2]$/.test(k)?pv([k,'',''],p).replace(/^—$/,''):p[k]})}
    rows.push(H.map(h=>q(r[h])));
   });
  });
@@ -811,9 +816,9 @@ const acts={
  tog(el){
   const a=(get(el.dataset.b)||[]).slice(),v=el.dataset.v,i=a.indexOf(v);
   if(i>=0)a.splice(i,1);else a.push(v);
-  set(el.dataset.b,ANO.filter(k=>a.includes(k)));touchDraft();refresh();
+  set(el.dataset.b,ANA.filter(k=>a.includes(k)));touchDraft();refresh();
  },
- an3(){set('pt.an',ANO.slice());touchDraft();refresh()},
+ an3(){set('pt.an',(S.ficha.tipo==='superficies'?ANS:ANO).slice());touchDraft();refresh()},
  grpadd(el){const k=el.dataset.k;S.ficha[k].push(k==='deps'?{cant:1,cap:'',material:null,limpieza:null}:{cant:1,cap:'',limpieza:null});saveDraft();render(true)},
  async grpdel(el){
   const k=el.dataset.k,i=+el.dataset.i;
