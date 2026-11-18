@@ -58,6 +58,14 @@ main.form{padding-bottom:140px}
 .it b{display:block;font-size:1.15rem;overflow-wrap:anywhere}
 .it span{color:var(--mut);font-size:.95rem}
 .empty{background:#fff;border:2px dashed var(--line);border-radius:16px;padding:20px;text-align:center;color:var(--mut);margin-bottom:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+.tabs button{min-height:58px;border:2px solid var(--line);border-radius:14px;background:#fff;font:inherit;font-weight:700;font-size:1.02rem;color:var(--ink);padding:6px 8px;line-height:1.15}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.dr{display:flex;align-items:stretch;gap:6px;background:#FFF7DB;border:2px solid #B7791F;border-left:10px solid var(--c);border-radius:14px;margin-bottom:10px;min-height:72px}
+.drb{flex:1;min-width:0;border:0;background:none;text-align:left;padding:12px;display:flex;flex-direction:column;justify-content:center;gap:2px;font:inherit;color:inherit}
+.drb b{font-size:1.15rem;overflow-wrap:anywhere}
+.drb span{color:var(--mut);font-size:.95rem}
+.dr .ib2{align-self:center;margin-right:8px}
 .draft{background:#FFF7DB;border:2px solid #B7791F;border-radius:16px;padding:14px;margin:4px 0 14px}
 .draft p{margin:0 0 10px}
 .draft .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -201,11 +209,13 @@ const TIPOS={
  quimica:{flow:'lim',label:'Química',short:'Desinfección química',full:'Limpieza y desinfección química',c:'#1E40AF',d:'#1E3A8A',t:'#E1E9FF',file:'Desinfeccion_Quimica',icon:'flask'},
  termica:{flow:'lim',label:'Térmica',short:'Desinfección térmica',full:'Limpieza y desinfección térmica',c:'#C2410C',d:'#7C2D12',t:'#FFE8DA',file:'Desinfeccion_Termica',icon:'therm'},
  legionella:{flow:'mue',label:'Legionella',short:'Muestras Legionella',full:'Toma de muestras · Legionella (RD 487/2022)',c:'#15803D',d:'#14532D',t:'#DCF5E4',file:'Muestras_Legionella',icon:'drop'},
+ superficies:{flow:'mue',label:'Superficies',short:'Muestras Superficies',full:'Toma de muestras · Superficies',c:'#6D28D9',d:'#4C1D95',t:'#EDE4FF',file:'Muestras_Superficies',icon:'spark'},
+ otras:{flow:'mue',label:'Otras',short:'Muestras Otras',full:'Toma de muestras · Otras',c:'#475569',d:'#1E293B',t:'#E8ECF2',file:'Muestras_Otras',icon:'edit'},
  piscina:{flow:'mue',label:'Piscina',short:'Muestras Piscina',full:'Toma de muestras · Piscina',c:'#0284C7',d:'#075985',t:'#DBF0FC',file:'Muestras_Piscina',icon:'waves'}
 };
 const STEPS={
- lim:[['inst','Tipo de instalación'],['tipo','Tipo de desinfección'],['datos','Datos'],['dep','Depósitos de agua fría sanitaria'],['acu','Acumuladores de agua caliente sanitaria'],['pts','Mediciones por punto'],['obs','Observaciones'],['res','Resumen']],
- mue:[['tipo','Tipo de muestreo'],['datos','Datos'],['pts','Puntos de muestreo'],['obs','Observaciones'],['res','Resumen']]
+ lim:[['inst','Tipo de instalación'],['datos','Datos de la instalación'],['tipo','Tipo de desinfección'],['dep','Depósitos de agua fría sanitaria'],['acu','Acumuladores de agua caliente sanitaria'],['pts','Mediciones por punto'],['obs','Observaciones'],['res','Resumen']],
+ mue:[['tipo','Tipo de muestreo'],['datos','Datos de la instalación'],['pts','Puntos de muestreo'],['obs','Observaciones'],['res','Resumen']]
 };
 const AGUA={acs:'Agua caliente sanitaria',afch:'Agua fría de consumo humano'};
 const ANL={leg:'Legionella',aer:'Aerobios',fe:'Hierro'};
@@ -214,7 +224,9 @@ const toN=v=>{const n=parseFloat(String(v==null?'':v).replace(',','.'));return i
 function sumCl(p){const a=toN(p.clL),b=toN(p.clR);if(a===null&&b===null)return '';return String(Math.round(((a||0)+(b||0))*100)/100).replace('.',',')}
 const ANO=['leg','aer','fe'];
 const anLabel=a=>Array.isArray(a)&&a.length?ANO.filter(k=>a.includes(k)).map(k=>ANL[k]).join(', '):'—';
-const INST={sanitaria:['Agua sanitaria','grifos y tuberías'],incendios:['Circuito contra incendios',''],riego:['Riego por aspersión',''],lavadero:['Lavadero de vehículos',''],clinica:['Clínica',''],otra:['Otra','']};
+const INST={sanitaria:['Agua sanitaria',''],incendios:['Circuito contra incendios',''],riego:['Riego por aspersión',''],lavadero:['Lavadero de vehículos',''],clinica:['Clínica dental',''],otra:['Otra','']};
+const INST_T={incendios:['quimica'],riego:['quimica'],clinica:['quimica']};
+const instTipos=f=>INST_T[f.tipoInst]||['quimica','termica'];
 const instLabel=f=>!f.tipoInst||!INST[f.tipoInst]?'—':f.tipoInst==='otra'?(f.tipoInstOtro&&f.tipoInstOtro.trim()?f.tipoInstOtro.trim():'Otra'):INST[f.tipoInst][0]+(INST[f.tipoInst][1]?' ('+INST[f.tipoInst][1]+')':'');
 const MATS=['Poliéster / fibra','Acero inoxidable','Acero galvanizado','Polietileno','Hormigón','Otro'];
 /* [clave, etiqueta, unidad] */
@@ -222,6 +234,8 @@ const PTDEF={
  quimica:[['nom','Punto',''],['agua','Tipo de agua',''],['hora','Hora',''],['cli','Cloro inicial','ppm'],['ph','pH',''],['temp','Temperatura','°C'],['clf','Cloro final','ppm']],
  termica:[['nom','Punto',''],['hora','Hora',''],['ti','Temp. inicial','°C'],['tf','Temp. final','°C']],
  legionella:[['nom','Punto de muestreo',''],['agua','Tipo de agua',''],['an','Análisis',''],['temp','Temperatura','°C'],['cl','Cloro','ppm'],['ph','pH','']],
+ superficies:[['nom','Punto de toma',''],['p1','Parámetro 1',''],['p2','Parámetro 2',''],['p3','Parámetro 3','']],
+ otras:[['nom','Punto de toma',''],['p1','Parámetro','']],
  piscina:[['nom','Vaso',''],['clL','Cloro libre','ppm'],['clR','Cloro residual','ppm'],['clT','Cloro total','ppm'],['ph','pH',''],['turb','Turbidez','UNF'],['transp','Transparencia',''],['cya','Ácido isocianúrico','mg/L']]
 };
 const L={cl:[],ph:[],t:[]};
@@ -234,10 +248,10 @@ const LU={cl:' ppm',ph:'',t:' °C'};
 const LDEF={cl:'1,0',ph:'7,0',t:'20'};
 
 /* ========== estado ========== */
-const S={view:'home',ficha:null,step:0,pt:null,ptIdx:-1,id:null,pdf:null,pdfErr:false,fromSave:false,q:''};
+const S={htab:'lim',view:'home',ficha:null,step:0,pt:null,ptIdx:-1,id:null,pdf:null,pdfErr:false,fromSave:false,q:''};
 let fichas={};          /* id -> ficha */
-let memDraft=null;
-const LS_F='kgs_fichas_v1',LS_D='kgs_draft_v1';
+let drafts={};          /* id -> {f,step,pt,ptIdx,t} (varias fichas en curso a la vez) */
+const LS_F='kgs_fichas_v1',LS_D='kgs_draft_v1',LS_DS='kgs_drafts_v2';
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
 const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
@@ -259,6 +273,8 @@ function newPunto(tipo){
  if(tipo==='quimica')return{nom:'',agua:null,hora:nowHM(),cli:'',clf:'',ph:'',temp:''};
  if(tipo==='termica')return{nom:'',hora:nowHM(),ti:'',tf:''};
  if(tipo==='legionella')return{nom:'',agua:null,an:['leg'],temp:'',cl:'',ph:''};
+ if(tipo==='superficies')return{nom:'',p1n:'',p1v:'',p2n:'',p2v:'',p3n:'',p3v:''};
+ if(tipo==='otras')return{nom:'',p1n:'',p1v:''};
  return{nom:'',clL:'',clR:'',clT:'',ph:'',turb:'',transp:'',cya:''};
 }
 const root=()=>({ficha:S.ficha,pt:S.pt});
@@ -267,14 +283,16 @@ function set(p,v){const a=p.split('.');let o=root()[a[0]];for(let i=1;i<a.length
 const curFicha=()=>S.view==='form'?S.ficha:(S.view==='detail'||S.view==='done')?fichas[S.id]:null;
 
 /* ========== borrador (en el móvil, a cada cambio) ========== */
+const persistDrafts=()=>{lsSet(LS_DS,drafts)};
+const isBlank=f=>!String(f.instalacion||'').trim()&&!f.tipo&&!(f.puntos||[]).length&&!String(f.obs||'').trim()&&!String(f.responsable||'').trim()&&!String(f.telefono||'').trim()&&!(f.deps||[]).length&&!(f.acs||[]).length&&f.deposito==null&&f.acum==null;
 function saveDraft(){
  if(S.view!=='form'||!S.ficha)return;
- const d={f:S.ficha,step:S.step,pt:S.pt,ptIdx:S.ptIdx,t:Date.now()};
- memDraft=d;lsSet(LS_D,d);
+ const f=S.ficha;
+ if(isBlank(f)&&!fichas[f.id]){if(drafts[f.id]){delete drafts[f.id];persistDrafts()}return}
+ drafts[f.id]={f:f,step:S.step,pt:S.pt,ptIdx:S.ptIdx,t:Date.now()};persistDrafts();
 }
 const touchDraft=debounce(saveDraft,200);
-const readDraft=()=>memDraft||lsGet(LS_D);
-function clearDraft(){memDraft=null;lsDel(LS_D)}
+function clearDraft(id){if(id&&drafts[id]){delete drafts[id];persistDrafts()}}
 
 /* ========== almacén: en este móvil ========== */
 function persistLocal(){if(!lsSet(LS_F,fichas))toast('No se pudo guardar en el móvil. Exporta una copia de seguridad.')}
@@ -340,9 +358,11 @@ function pickFld(kind,path,label,unit){
 
 /* ========== pasos ========== */
 function sTipo(f){
- const ts=f.flow==='lim'?['quimica','termica']:['legionella','piscina'];
+ let ts=f.flow==='lim'?instTipos(f).slice():['legionella','piscina','superficies','otras'];
+ if(f.flow==='lim'&&f.tipo&&!ts.includes(f.tipo))ts.push(f.tipo);
  return '<div class="stack">'+ts.map(t=>{const T=TIPOS[t],on=f.tipo===t;
-  return '<button type="button" class="tp'+(on?' on':'')+'" style="--c:'+T.c+';--ct:'+T.t+'" data-act="tipo" data-v="'+t+'"><span class="tpi">'+ico(T.icon,40)+'</span><span class="tpt"><b>'+T.label+'</b>'+(t==='legionella'?'<small>RD 487/2022</small>':'')+'</span>'+(on?ico('check',34):'')+'</button>'}).join('')+'</div>';
+  return '<button type="button" class="tp'+(on?' on':'')+'" style="--c:'+T.c+';--ct:'+T.t+'" data-act="tipo" data-v="'+t+'"><span class="tpi">'+ico(T.icon,40)+'</span><span class="tpt"><b>'+T.label+'</b>'+(t==='legionella'?'<small>RD 487/2022</small>':'')+'</span>'+(on?ico('check',34):'')+'</button>'}).join('')+'</div>'+
+  (ts.length===1?'<p class="hint">En este tipo de instalación solo se hace desinfección química.</p>':'');
 }
 function sDatos(f){
  let h=txt('ficha.instalacion','Instalación',{ph:'Nombre de la instalación',cap:'words'});
@@ -386,7 +406,7 @@ function ptChips(tipo,p){
  return PTDEF[tipo].filter(d=>d[0]!=='nom').map(d=>'<span><i>'+d[1]+'</i>'+esc(pv(d,p,true))+'</span>').join('');
 }
 function sPts(f){
- if(!f.tipo)return '<div class="empty">Primero elige el tipo de trabajo en el paso 1.</div><button type="button" class="btn wide" data-act="goto" data-s="tipo">Ir al paso 1</button>';
+ if(!f.tipo)return '<div class="empty">Primero elige el tipo de trabajo.</div><button type="button" class="btn wide" data-act="goto" data-s="tipo">Elegir tipo</button>';
  let h='';
  if(!f.puntos.length)h+='<div class="empty">Todavía no hay puntos.<br>Toca «Añadir punto».</div>';
  f.puntos.forEach((p,i)=>{
@@ -419,6 +439,7 @@ function pv(d,p,withUnit){
  const k=d[0],unit=d[2];let v=p[k];
  if(k==='agua')return AGUA[v]||'—';
  if(k==='an')return anLabel(v);
+ if(/^p[1-3]$/.test(k)){const n=String(p[k+'n']||'').trim(),w=String(p[k+'v']||'').trim();return !n&&!w?'—':(n||'Parámetro')+': '+(w||'—')}
  if(k==='transp')return TRANSP[v]||(v==null||v===''?'—':String(v));
  if(v==null||v==='')return '—';
  return withUnit&&unit?v+' '+unit:String(v);
@@ -481,26 +502,34 @@ function textSummary(f){
 function chipHTML(t){const T=TIPOS[t];return '<span class="chip" style="--c:'+T.c+'">'+ico(T.icon,20)+'</span>'}
 function histHTML(){
  const q=norm(S.q);
- const arr=Object.values(fichas).filter(f=>!q||norm(f.instalacion).includes(q)).sort((a,b)=>(b.fecha+(b.hora||'')).localeCompare(a.fecha+(a.hora||''))||b.updated-a.updated);
- if(!arr.length)return '<div class="empty">'+(Object.keys(fichas).length?'Ninguna ficha coincide con la búsqueda.':'Todavía no hay fichas guardadas.')+'</div>';
+ const arr=Object.values(fichas).filter(f=>f.flow===S.htab&&(!q||norm(f.instalacion).includes(q))).sort((a,b)=>(b.fecha+(b.hora||'')).localeCompare(a.fecha+(a.hora||''))||b.updated-a.updated);
+ if(!arr.length){
+  const hay=Object.values(fichas).some(f=>f.flow===S.htab);
+  return '<div class="empty">'+(hay?'Ninguna ficha coincide con la búsqueda.':S.htab==='lim'?'Todavía no hay limpiezas y desinfecciones guardadas.':'Todavía no hay tomas de muestras guardadas.')+'</div>';
+ }
  return arr.map(f=>{const T=TIPOS[f.tipo]||TIPOS.quimica;
   return '<button type="button" class="item" data-act="open" data-id="'+esc(f.id)+'" style="--c:'+T.c+';--ct:'+T.t+';--cd:'+T.d+'"><span class="ib">'+ico(T.icon,26)+'</span><span class="it"><b>'+esc(f.instalacion||'Sin nombre')+'</b><span>'+fmtDate(f.fecha)+' · '+T.short+'</span></span>'+ico('right',22)+'</button>';
  }).join('');
 }
+function draftsHTML(){
+ const arr=Object.values(drafts).filter(d=>d&&d.f).sort((a,b)=>(b.t||0)-(a.t||0));
+ if(!arr.length)return '';
+ return '<h2 class="sec">En curso</h2>'+arr.map(d=>{const f=d.f,T=TIPOS[f.tipo],n=STEPS[f.flow].length;
+  const what=T?T.short:(f.flow==='lim'?'Limpieza y desinfección':'Toma de muestras');
+  const st=fichas[f.id]?'editando':'paso '+(Math.min(d.step||0,n-1)+1)+' de '+n;
+  return '<div class="dr" style="--c:'+(T?T.c:'#0B1220')+'"><button type="button" class="drb" data-act="resume" data-id="'+esc(f.id)+'"><b>'+esc(f.instalacion||'Sin nombre')+'</b><span>'+esc(what)+' · '+st+' · toca para continuar</span></button><button type="button" class="ib2 bad" data-act="discard" data-id="'+esc(f.id)+'" aria-label="Descartar ficha en curso">'+ico('trash',24)+'</button></div>';
+ }).join('');
+}
 function vHome(){
- const d=readDraft();
- let dr='';
- if(d&&d.f){const T=TIPOS[d.f.tipo];
-  dr='<div class="draft"><p><b>Ficha sin terminar</b><br>'+esc((T?T.short:d.f.flow==='lim'?'Limpieza y desinfección':'Toma de muestras')+(d.f.instalacion?' · '+d.f.instalacion:''))+'</p><div class="two"><button type="button" class="btn pri" style="--c:#8A5A00" data-act="resume">Continuar</button><button type="button" class="btn bad" data-act="discard">Descartar</button></div></div>';
- }
  const standalone=window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
  const hint=(!standalone&&!lsGet('kgs_hint_off'))?'<div class="draft" style="background:#E8F0FE;border-color:#1E40AF"><p><b>Úsala como una app</b><br>Toca Compartir y elige «Añadir a pantalla de inicio». Abre siempre la app desde ese icono: así tienes tus fichas ahí.</p><button type="button" class="btn" data-act="hidehint">Entendido</button></div>':'';
  return '<header class="top"><div class="in-w"><div class="brand"><div class="bm">KGS</div><div><b>KGS Soluciones</b><span>Prevención y control de legionela</span></div></div><div class="sync" id="sync">'+syncChip()+'</div></div></header>'+
  '<main class="pad">'+hint+
  '<button type="button" class="big" data-act="new" data-flow="lim"><span class="chips">'+chipHTML('quimica')+chipHTML('termica')+'</span><span class="bt">Limpieza y desinfección</span>'+ico('right',30)+'</button>'+
  '<button type="button" class="big" data-act="new" data-flow="mue"><span class="chips">'+chipHTML('legionella')+chipHTML('piscina')+'</span><span class="bt">Toma de muestras</span>'+ico('right',30)+'</button>'+
- dr+
+ draftsHTML()+
  '<h2 class="sec">Historial</h2>'+
+ '<div class="tabs" role="tablist"><button type="button" role="tab" class="'+(S.htab==='lim'?'on':'')+'" data-act="htab" data-v="lim">Limpieza y desinfección</button><button type="button" role="tab" class="'+(S.htab==='mue'?'on':'')+'" data-act="htab" data-v="mue">Toma de muestras</button></div>'+
  '<div class="search">'+ico('search',22)+'<input id="q" class="in" type="search" placeholder="Buscar instalación" value="'+esc(S.q)+'" autocomplete="off" enterkeyhint="search"></div>'+
  '<div id="hist">'+histHTML()+'</div>'+
  '<button type="button" class="btn wide" data-act="csv">'+ico('dl',24)+' Descargar todas las fichas (CSV)</button>'+
@@ -535,8 +564,6 @@ function vDone(){
  const T=TIPOS[f.tipo];
  const ready=!!S.pdf;
  const state=S.pdf?'':S.pdfErr?'<div class="warn"><h3>'+ico('warn',26)+' No se pudo crear el PDF</h3><p style="margin:0 0 10px">La ficha está guardada. Comprueba la conexión e inténtalo de nuevo.</p><button type="button" class="btn wide" data-act="retrypdf">Reintentar PDF</button></div>':'<p class="center muted">Generando PDF…</p>';
- const txt=encodeURIComponent(textSummary(f));
- const sub=encodeURIComponent(pdfName(f).replace('.pdf',''));
  return '<header class="top"><div class="in-w"><div class="row"><button type="button" class="hx" data-act="home" aria-label="Volver al inicio">'+ico('left',26)+'</button><span class="stp">'+(S.fromSave?'Ficha guardada':'Compartir ficha')+'</span></div><h1 style="margin-top:8px">'+esc(T.full)+'</h1></div></header>'+
  '<main class="pad">'+
  (S.fromSave?'<div class="ok">'+ico('check',46)+'</div><p class="center strong" style="margin:0 0 4px">Guardada en el historial</p>':'')+
@@ -544,14 +571,11 @@ function vDone(){
  '<div class="fn">'+esc(pdfName(f))+'</div>'+state+
  '<button type="button" class="btn pri wide'+(ready?'':' off')+'" data-act="sharepdf" style="min-height:68px">'+ico('share',26)+' Compartir PDF</button>'+
  '<p class="hint center">Abre el menú de compartir del móvil con el PDF adjunto.</p>'+
- '<h2 class="sec">Otras formas de enviarlo</h2>'+
+ '<h2 class="sec">Otras opciones</h2>'+
  '<div class="stack">'+
- '<a class="btn" href="https://wa.me/?text='+txt+'" target="_blank" rel="noopener">'+ico('chat',24)+' WhatsApp (resumen en texto)</a>'+
- '<a class="btn" href="mailto:?subject='+sub+'&body='+txt+'" target="_blank" rel="noopener">'+ico('mail',24)+' Correo (resumen en texto)</a>'+
  '<button type="button" class="btn'+(ready?'':' off')+'" data-act="dlpdf">'+ico('dl',24)+' Descargar PDF</button>'+
  '<button type="button" class="btn" data-act="copy">'+ico('copy',24)+' Copiar resumen</button>'+
  '</div>'+
- '<p class="hint">Si el correo no se abre, usa «Copiar resumen» y pégalo donde quieras.</p>'+
  '<button type="button" class="btn wide" style="margin-top:22px" data-act="home">Volver al inicio</button>'+
  '</main>';
 }
@@ -586,6 +610,12 @@ function sheetFields(){
   h+=txt('pt.nom','Punto de muestreo',{ph:'Ej.: Retorno ACS',cap:'sentences'});
   h+=aguaFld()+anFld();
   h+=pickFld('t','pt.temp','Temperatura','°C')+pickFld('cl','pt.cl','Cloro','ppm')+pickFld('ph','pt.ph','pH','');
+ }else if(t==='superficies'||t==='otras'){
+  h+=txt('pt.nom','Punto de toma',{ph:'Ej.: Mesa de trabajo',cap:'sentences'});
+  const n=t==='superficies'?3:1;
+  for(let i=1;i<=n;i++){
+   h+='<div class="fld" style="border-top:2px solid var(--line);padding-top:14px;margin-top:6px"><div class="lab">'+(n>1?'Parámetro '+i:'Parámetro')+'</div></div>'+txt('pt.p'+i+'n','Qué se mide',{ph:'Ej.: ATP, pH, temperatura',cap:'sentences'})+txt('pt.p'+i+'v','Valor',{ph:'Ej.: 12 RLU'});
+  }
  }else{
   h+=txt('pt.nom','Nombre del vaso',{ph:'Ej.: Vaso grande',cap:'sentences'});
   S.pt.clT=sumCl(S.pt);
@@ -681,7 +711,7 @@ function makePDF(f){
  }
  const defs=PTDEF[f.tipo];
  const cols=[['Nº','']].concat(defs.map(d=>[d[1],d[0]==='agua'?'':d[2]]));
- const leftK=k=>k==='nom'||k==='agua'||k==='an';
+ const leftK=k=>k==='nom'||k==='agua'||k==='an'||/^p[1-3]$/.test(k);
  const headRow=cols.map((c,i)=>({content:ps(c[0]+(c[1]?'\n('+c[1]+')':'')),styles:{fillColor:TT,textColor:D,fontStyle:'bold',halign:i===0?'center':leftK(defs[i-1][0])?'left':'center',fontSize:8.5}}));
  const body=f.puntos.map((p,i)=>[String(i+1)].concat(defs.map(d=>ps(pv(d,p,false)))));
  const cs={0:{cellWidth:9,halign:'center'}};
@@ -706,7 +736,7 @@ async function finishSave(){
  const f=S.ficha;
  if(missing(f).length){toast('Faltan datos importantes: revisa el aviso en rojo');window.scrollTo(0,0);return}
  f.instalacion=f.instalacion.trim();
- saveFicha(f);clearDraft();
+ saveFicha(f);clearDraft(f.id);S.htab=f.flow;
  S.id=f.id;S.ficha=null;S.pt=null;S.view='done';S.fromSave=true;
  render();
  await genPDF(fichas[S.id]);
@@ -726,11 +756,13 @@ async function copyText(t){
  await dialog({title:'Copiar resumen',html:'<textarea readonly id="cp">'+esc(t)+'</textarea>',btns:[{l:'Cerrar',v:1}]});
 }
 function csvAll(){
- const H=['ID','Trabajo','Instalación','Tipo de instalación','Fecha','Hora','Responsable','Teléfono','Depósito','Depósitos (detalle)','Acumulador','Acumuladores (detalle)','Nº punto','Punto','Tipo de agua','Análisis','Hora medición','Cloro inicial (ppm)','Cloro final (ppm)','pH','Temperatura (°C)','Temperatura inicial (°C)','Temperatura final (°C)','Cloro (ppm)','Cloro libre (ppm)','Cloro residual (ppm)','Cloro total (ppm)','Turbidez (UNF)','Transparencia','Ácido isocianúrico (mg/L)','Observaciones'];
+ const H=['ID','Trabajo','Instalación','Tipo de instalación','Fecha','Hora','Responsable','Teléfono','Depósito','Depósitos (detalle)','Acumulador','Acumuladores (detalle)','Nº punto','Punto','Tipo de agua','Análisis','Hora medición','Cloro inicial (ppm)','Cloro final (ppm)','pH','Temperatura (°C)','Temperatura inicial (°C)','Temperatura final (°C)','Cloro (ppm)','Cloro libre (ppm)','Cloro residual (ppm)','Cloro total (ppm)','Turbidez (UNF)','Transparencia','Ácido isocianúrico (mg/L)','Parámetro 1','Parámetro 2','Parámetro 3','Observaciones'];
  const MAP={
   quimica:{nom:'Punto',agua:'Tipo de agua',hora:'Hora medición',cli:'Cloro inicial (ppm)',clf:'Cloro final (ppm)',ph:'pH',temp:'Temperatura (°C)'},
   termica:{nom:'Punto',hora:'Hora medición',ti:'Temperatura inicial (°C)',tf:'Temperatura final (°C)'},
   legionella:{nom:'Punto',agua:'Tipo de agua',an:'Análisis',temp:'Temperatura (°C)',cl:'Cloro (ppm)',ph:'pH'},
+  superficies:{nom:'Punto',p1:'Parámetro 1',p2:'Parámetro 2',p3:'Parámetro 3'},
+  otras:{nom:'Punto',p1:'Parámetro 1'},
   piscina:{nom:'Punto',clL:'Cloro libre (ppm)',clR:'Cloro residual (ppm)',clT:'Cloro total (ppm)',ph:'pH',turb:'Turbidez (UNF)',transp:'Transparencia',cya:'Ácido isocianúrico (mg/L)'}
  };
  const q=v=>{v=String(v==null?'':v);return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
@@ -748,7 +780,7 @@ function csvAll(){
   const list=f.puntos.length?f.puntos:[null];
   list.forEach((p,i)=>{
    const r=Object.assign({},baseR);
-   if(p){r['Nº punto']=i+1;const m=MAP[f.tipo]||{};Object.keys(m).forEach(k=>{r[m[k]]=k==='agua'?(AGUA[p[k]]||''):k==='an'?(Array.isArray(p[k])?anLabel(p[k]).replace('—',''):''):k==='transp'?(TRANSP[p[k]]||p[k]):p[k]})}
+   if(p){r['Nº punto']=i+1;const m=MAP[f.tipo]||{};Object.keys(m).forEach(k=>{r[m[k]]=k==='agua'?(AGUA[p[k]]||''):k==='an'?(Array.isArray(p[k])?anLabel(p[k]).replace('—',''):''):k==='transp'?(TRANSP[p[k]]||p[k]):/^p[1-3]$/.test(k)?pv([k,'',''],p).replace(/^—$/,''):p[k]})}
    rows.push(H.map(h=>q(r[h])));
   });
  });
@@ -757,28 +789,22 @@ function csvAll(){
 
 /* ========== acciones ========== */
 function startForm(f,step){S.ficha=f;S.step=step;S.pt=null;S.ptIdx=-1;S.view='form';saveDraft();render()}
-async function ensureNoDraft(){
- const d=readDraft();
- if(!d||!d.f)return true;
- const r=await dialog({title:'Tienes una ficha sin terminar',text:'¿Qué quieres hacer con ella?',btns:[{l:'Continuar la anterior',v:'c',cls:'pri'},{l:'Descartarla y seguir',v:'d',cls:'bad'},{l:'Cancelar',v:'x'}]});
- if(r==='c'){resumeDraft();return false}
- if(r==='d'){clearDraft();return true}
- return false;
-}
-function resumeDraft(){
- const d=readDraft();if(!d)return;
+function resumeDraft(id){
+ const d=drafts[id];if(!d)return;
  S.ficha=normF(d.f);S.step=Math.min(d.step||0,STEPS[d.f.flow].length-1);S.pt=d.pt||null;S.ptIdx=d.ptIdx==null?-1:d.ptIdx;S.view='form';render();
 }
 const parseV=v=>v==='true'?true:v==='false'?false:v;
 const acts={
- async new(el){if(!(await ensureNoDraft()))return;startForm(newFicha(el.dataset.flow),0)},
- resume(){resumeDraft()},
- async discard(){if(await confirmBox('¿Descartar la ficha sin terminar?','Se perderán los datos que no hayas guardado.','Descartar')){clearDraft();render(true)}},
+ new(el){startForm(newFicha(el.dataset.flow),0)},
+ resume(el){resumeDraft(el.dataset.id)},
+ async discard(el){const id=el.dataset.id,d=drafts[id];if(await confirmBox('¿Descartar esta ficha en curso?',((d&&d.f&&d.f.instalacion)||'Sin nombre')+': se perderán los datos que no hayas guardado.','Descartar')){clearDraft(id);render(true)}},
+ htab(el){S.htab=el.dataset.v;render(true)},
  tipo(el){S.ficha.tipo=el.dataset.v;saveDraft();render(true)},
  set(el){
   set(el.dataset.b,parseV(el.dataset.v));
   const f=S.ficha;
   if(f&&el.dataset.b==='ficha.deposito'&&f.deposito===true&&!f.deps.length)f.deps.push({cant:1,cap:'',material:null,limpieza:null});
+  if(f&&el.dataset.b==='ficha.tipoInst'){const al=instTipos(f);if(f.tipo&&!al.includes(f.tipo))f.tipo=null;if(al.length===1)f.tipo=al[0]}
   if(f&&el.dataset.b==='ficha.acum'&&f.acum===true&&!f.acs.length)f.acs.push({cant:1,cap:'',limpieza:null});
   touchDraft();refresh();
  },
@@ -812,7 +838,7 @@ const acts={
   S.step++;saveDraft();render();
  },
  back(){if(S.step===0){acts.exit();return}S.step--;saveDraft();render()},
- exit(){saveDraft();S.view='home';S.ficha=null;S.pt=null;render()},
+ exit(){saveDraft();const f0=S.ficha;if(f0&&fichas[f0.id]&&JSON.stringify(f0)===JSON.stringify(fichas[f0.id]))clearDraft(f0.id);S.view='home';S.ficha=null;S.pt=null;render()},
  ptadd(){S.pt=newPunto(S.ficha.tipo);S.ptIdx=-1;saveDraft();renderSheet()},
  ptedit(el){S.ptIdx=+el.dataset.i;S.pt=clone(S.ficha.puntos[S.ptIdx]);saveDraft();renderSheet()},
  async ptdel(el){const i=+el.dataset.i;if(await confirmBox('¿Borrar el punto '+(i+1)+'?',(S.ficha.puntos[i].nom||'Sin nombre'),'Borrar punto')){S.ficha.puntos.splice(i,1);saveDraft();render(true)}},
@@ -824,8 +850,7 @@ const acts={
  ptcancel(){S.pt=null;S.ptIdx=-1;saveDraft();renderSheet()},
  save(){finishSave()},
  open(el){S.id=el.dataset.id;S.view='detail';render()},
- async edit(el){
-  if(!(await ensureNoDraft()))return;
+ edit(el){
   const f=clone(fichas[el.dataset.id]);startForm(f,STEPS[f.flow].length-1);
  },
  async del(el){if(await confirmBox('¿Borrar esta ficha?','Se eliminará del historial y no se podrá recuperar.','Borrar ficha')){deleteFicha(el.dataset.id);S.view='home';render();toast('Ficha borrada')}},
@@ -896,10 +921,13 @@ window.addEventListener('pagehide',saveDraft);
 /* ========== arranque ========== */
 (function init(){
  const f=lsGet(LS_F);if(f&&typeof f==='object'&&!Array.isArray(f)){fichas=f;Object.values(fichas).forEach(normF)}
+ const dv=lsGet(LS_DS);if(dv&&typeof dv==='object'&&!Array.isArray(dv)){drafts=dv;Object.keys(drafts).forEach(k=>{if(!drafts[k]||!drafts[k].f||!STEPS[drafts[k].f.flow]){delete drafts[k]}else normF(drafts[k].f)})}
+ const old=lsGet(LS_D);if(old&&old.f&&old.f.id&&STEPS[old.f.flow]&&!drafts[old.f.id]){drafts[old.f.id]=old;normF(old.f);persistDrafts()}
+ lsDel(LS_D);
  render();
  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
  try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
- window.__kgs={S,acts,get fichas(){return fichas},csvAll,makePDF,ensureLib,textSummary,missing};
+ window.__kgs={S,acts,get drafts(){return drafts},get fichas(){return fichas},csvAll,makePDF,ensureLib,textSummary,missing};
 })();
 })();
 </script>
