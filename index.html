@@ -58,9 +58,15 @@ main.form{padding-bottom:140px}
 .it b{display:block;font-size:1.15rem;overflow-wrap:anywhere}
 .it span{color:var(--mut);font-size:.95rem}
 .empty{background:#fff;border:2px dashed var(--line);border-radius:16px;padding:20px;text-align:center;color:var(--mut);margin-bottom:14px}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
-.tabs button{min-height:58px;border:2px solid var(--line);border-radius:14px;background:#fff;font:inherit;font-weight:700;font-size:1.02rem;color:var(--ink);padding:6px 8px;line-height:1.15}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
+.tabs button{min-height:58px;border:2px solid var(--line);border-radius:14px;background:#fff;font:inherit;font-weight:700;font-size:.92rem;color:var(--ink);padding:6px 6px;line-height:1.15}
 .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ck{background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px;margin-bottom:10px}
+.ckl{font-weight:700;font-size:1.05rem;margin-bottom:8px;overflow-wrap:anywhere}
+.ckb{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ckb .ch{min-height:56px}
+.ckb .ch.ok.on{background:#15803D;color:#fff;border-color:#15803D}
+.ckb .ch.ko.on{background:#B91C1C;color:#fff;border-color:#B91C1C}
 .dr{display:flex;align-items:stretch;gap:6px;background:#FFF7DB;border:2px solid #B7791F;border-left:10px solid var(--c);border-radius:14px;margin-bottom:10px;min-height:72px}
 .drb{flex:1;min-width:0;border:0;background:none;text-align:left;padding:12px;display:flex;flex-direction:column;justify-content:center;gap:2px;font:inherit;color:inherit}
 .drb b{font-size:1.15rem;overflow-wrap:anywhere}
@@ -211,12 +217,69 @@ const TIPOS={
  legionella:{flow:'mue',label:'Legionella',short:'Muestras Legionella',full:'Toma de muestras · Legionella (RD 487/2022)',c:'#15803D',d:'#14532D',t:'#DCF5E4',file:'Muestras_Legionella',icon:'drop'},
  superficies:{flow:'mue',label:'Superficies',short:'Muestras Superficies',full:'Toma de muestras · Superficies',c:'#6D28D9',d:'#4C1D95',t:'#EDE4FF',file:'Muestras_Superficies',icon:'spark'},
  otras:{flow:'mue',label:'Otras',short:'Muestras Otras',full:'Toma de muestras · Otras',c:'#475569',d:'#1E293B',t:'#E8ECF2',file:'Muestras_Otras',icon:'edit'},
+ revision:{flow:'seg',label:'Revisión',short:'Revisión',full:'Seguridad alimentaria · Revisión',c:'#0F766E',d:'#134E4A',t:'#D5F5F0',file:'Revision',icon:'check'},
+ temperaturas:{flow:'seg',label:'Verificación de temperaturas',short:'Verificación de temperaturas',full:'Seguridad alimentaria · Verificación de temperaturas',c:'#BE123C',d:'#881337',t:'#FFE1E8',file:'Verificacion_Temperaturas',icon:'therm'},
  piscina:{flow:'mue',label:'Piscina',short:'Muestras Piscina',full:'Toma de muestras · Piscina',c:'#0284C7',d:'#075985',t:'#DBF0FC',file:'Muestras_Piscina',icon:'waves'}
 };
 const STEPS={
  lim:[['inst','Tipo de instalación'],['datos','Datos de la instalación'],['tipo','Tipo de desinfección'],['dep','Depósitos de agua fría sanitaria'],['acu','Acumuladores de agua caliente sanitaria'],['pts','Mediciones por punto'],['obs','Observaciones'],['res','Resumen']],
- mue:[['tipo','Tipo de muestreo'],['datos','Datos de la instalación'],['pts','Puntos de muestreo'],['obs','Observaciones'],['res','Resumen']]
+ mue:[['tipo','Tipo de muestreo'],['datos','Datos de la instalación'],['pts','Puntos de muestreo'],['obs','Observaciones'],['res','Resumen']],
+ seg:[['tipo','Tipo de trabajo'],['datos','Datos de la instalación'],['res','Resumen']]
 };
+const LD=['Orden','Envasado','Etiquetado','Fecha de caducidad','Estado físico'];
+const LISTAS={
+ limpieza:{label:'Limpieza y desinfección',file:'Limpieza',ok:['Limpio','Sucio'],blocks:[
+  {t:'Cocina: maquinaria',items:['Fogones','Planchas','Hornos','Microondas','Cámaras frigoríficas','Cámaras y arcones congelador','Cortadora de fiambre','Freidoras']},
+  {t:'Cocina: instalaciones y mobiliario',items:['Bancos y mesas de trabajo','Suelos','Alicatados y techos','Campana extractora','Cubos de basura','Estanterías','Desagües y sifones','Tablas de cortar']},
+  {t:'Cocina: lavado de vajilla y utillaje',items:['Ollas, bateas, peroles, sartenes','Cuchillos, hachas, pinchos, etc.','Cubertería','Cristalería','Menaje','Dosificadores de jabón','Descalcificador']},
+  {t:'Barra y sala',items:['Suelos y rincones','Barra y estantes de barra','Vitrinas expositoras frío/caliente','Tiradores de cerveza/refrescos','Cafetera','Botelleros y arcones','Sillas y mesas']},
+  {t:'Servicios',items:['Suelos','Paredes (alicatados)','Dosificador de jabón','Saneamientos','Espejos','Papel higiénico','Celulosa','Papeleras']},
+  {t:'Almacén y varios',items:['Suelos y rincones','Techos','Paredes','Estanterías','Puertas','Ventanas','Extintores','Utensilios de limpieza']}]},
+ mantenimiento:{label:'Mantenimiento preventivo',file:'Mantenimiento',ok:['Bien','Mal'],blocks:[
+  {t:'Mantenimiento de locales e instalaciones',items:['Suelos y rincones','Paredes y alicatados','Techos','Puertas','Superficies en contacto con alimentos','Ventanas','Mosquiteras','Focos de luz','Insectocutores','Cuadros eléctricos','Rejillas, sifones, desagües','Grifos (agua fría/caliente)','Cubos de basura']},
+  {t:'Mantenimiento de equipos',items:['Cámaras frigoríficas','Cámaras congeladoras','Vitrinas expositoras','Armarios calientes','Campanas extractoras','Fogones y planchas','Freidoras','Microondas','Hornos','Lavavajillas / tren de lavado','Cortadoras de fiambre','Balanzas','Termómetros','Extintores']},
+  {t:'Mantenimiento de utensilios',items:['Utillaje de sala','Utillaje de cocina']}]},
+ materias:{label:'Materias primas',file:'MateriasPrimas',ok:['Bien','Mal'],blocks:[
+  {t:'Limpieza e higiene de las áreas de almacenamiento',items:['Suelos','Estanterías','Rincones','Techos','Paredes']},
+  {t:'Mercancías perecederas (refrigeración y congelación)',items:LD},
+  {t:'Mercancías no perecederas (conservas y bebidas)',items:LD},
+  {t:'Control de la recepción de mercancías',items:['Aspecto visual','Olor','Fecha de caducidad','Etiquetado','Envasado','Cantidad','Limpieza del transporte','Condiciones del transporte','Plazo de entrega'],temp:true}]},
+ residuos:{label:'Residuos, manipuladores y plagas',file:'ResiduosPlagas',ok:['Bien','Mal'],blocks:[
+  {t:'Control de residuos',items:['Desperdicios en zonas de manipulación','Cubos de basura sin rebosar','Flujo de evacuación de residuos','Ubicación de bidones de aceites','Estado de bidones de aceites']},
+  {t:'Control de manipuladores',items:['Higiene personal','Indumentaria limpia e higiénica','Uso del cubrecabezas','Calzado adecuado','No se usan anillos, relojes, etc.','Uñas cortadas y sin esmalte','Heridas cubiertas con apósitos impermeables','Nadie fuma, come, masca chicle… en el área de manipulación','Existencia de jabón y celulosa','Buenas prácticas de manipulación']},
+  {t:'Control de plagas',items:['Ubicación de los cebos','Estado de los cebos','Indicios de plagas','Recuentos (reptantes, voladores, roedores)','Integridad de los envases','Estado de zócalos','Estado de paramentos'],obsLabel:'Recuentos y observaciones'}]}
+};
+const LORDER=['limpieza','mantenimiento','materias','residuos'];
+const stLabel=(L,v)=>v==='ok'?L.ok[0]:v==='ko'?L.ok[1]:'—';
+const noAcu=f=>f.tipoInst==='incendios';
+const depTitle=f=>noAcu(f)?'Depósitos':'Depósitos de agua fría sanitaria';
+function stepsOf(f){
+ if(f.flow==='lim'){
+  let a=STEPS.lim.map(x=>x.slice());
+  if(noAcu(f)){a=a.filter(x=>x[0]!=='acu');a.forEach(x=>{if(x[0]==='dep')x[1]='Depósitos'})}
+  return a;
+ }
+ if(f.flow==='seg'){
+  if(f.tipo==='revision'){
+   const a=[['tipo','Tipo de trabajo'],['datos','Datos de la instalación'],['lista','Lista de revisión']];
+   if(f.lista&&LISTAS[f.lista])LISTAS[f.lista].blocks.forEach((b,i)=>a.push(['b'+i,b.t]));
+   a.push(['res','Resumen']);return a;
+  }
+  if(f.tipo==='temperaturas')return [['tipo','Tipo de trabajo'],['datos','Datos de la instalación'],['pts','Equipos y temperaturas'],['obs','Observaciones'],['res','Resumen']];
+ }
+ return STEPS[f.flow];
+}
+const fullTitle=f=>{const T=TIPOS[f.tipo]||{full:'Ficha'};return T.full+(f.tipo==='revision'&&LISTAS[f.lista]?': '+LISTAS[f.lista].label:'')};
+const shortOf=f=>{const T=TIPOS[f.tipo]||TIPOS.quimica;return T.short+(f.tipo==='revision'&&LISTAS[f.lista]?' · '+LISTAS[f.lista].label:'')};
+const ptsTitle=f=>f.flow==='lim'?'Mediciones por punto':f.flow==='seg'?'Equipos y temperaturas':'Puntos de muestreo';
+function revRows(f){
+ const L=LISTAS[f.lista];if(!L)return [];
+ return L.blocks.map((b,i)=>{
+  const rows=b.items.map((it,j)=>[it,stLabel(L,(f.chk||{})['b'+i+'_'+j])]);
+  if(b.temp)rows.push(['Temperatura',(f.extra&&f.extra.temp)?f.extra.temp+' °C':'—']);
+  return{t:b.t,rows,obs:String((f.bobs||{})['b'+i]||'').trim(),obsLabel:b.obsLabel||'Observaciones',key:'b'+i};
+ });
+}
 const AGUA={acs:'Agua caliente sanitaria',afch:'Agua fría de consumo humano'};
 const ANL={leg:'Legionella',aer:'Aerobios',fe:'Hierro',ent:'Enterobacterias',lis:'Listeria'};
 const TRANSP={buena:'Buena',regular:'Regular',mala:'Mala'};
@@ -238,16 +301,18 @@ const PTDEF={
  legionella:[['nom','Punto de muestreo',''],['agua','Tipo de agua',''],['an','Análisis',''],['temp','Temperatura','°C'],['cl','Cloro','ppm'],['ph','pH','']],
  superficies:[['nom','Punto de toma',''],['an','Análisis','']],
  otras:[['nom','Punto de muestreo',''],['ta','Tipo de análisis',''],['p1','Parámetro 1',''],['p2','Parámetro 2','']],
+ temperaturas:[['nom','Equipo o punto',''],['hora','Hora',''],['tc','Temperatura','°C']],
  piscina:[['nom','Vaso',''],['clL','Cloro libre','ppm'],['clR','Cloro residual','ppm'],['clT','Cloro total','ppm'],['ph','pH',''],['turb','Turbidez','UNF'],['transp','Transparencia',''],['cya','Ácido isocianúrico','mg/L']]
 };
-const L={cl:[],ph:[],t:[]};
+const L={cl:[],ph:[],t:[],tc:[]};
 L.cl.push('0,0');
 for(let i=1;i<=25;i++)L.cl.push((i/5).toFixed(1).replace('.',','));   /* 0,2 en 0,2 hasta 5,0 */
 for(let i=11;i<=60;i++)L.cl.push((i/2).toFixed(1).replace('.',','));  /* 0,5 en 0,5 hasta 30,0 */
 for(let i=60;i<=90;i++)L.ph.push((i/10).toFixed(1).replace('.',','));
 for(let i=0;i<=80;i++)L.t.push(String(i));
-const LU={cl:' ppm',ph:'',t:' °C'};
-const LDEF={cl:'1,0',ph:'7,0',t:'20'};
+for(let i=-60;i<=180;i++)L.tc.push((i/2).toFixed(1).replace('.',','));  /* -30,0 a 90,0 de 0,5 en 0,5 */
+const LU={cl:' ppm',ph:'',t:' °C',tc:' °C'};
+const LDEF={cl:'1,0',ph:'7,0',t:'20',tc:'4,0'};
 
 /* ========== estado ========== */
 const S={htab:'lim',view:'home',ficha:null,step:0,pt:null,ptIdx:-1,id:null,pdf:null,pdfErr:false,fromSave:false,q:''};
@@ -260,7 +325,7 @@ const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
 
 function newFicha(flow){
  return{id:uid(),flow,tipo:null,tipoInst:flow==='lim'?'sanitaria':'',tipoInstOtro:'',instalacion:'',fecha:todayISO(),hora:nowHM(),responsable:'',telefono:'',
-  deposito:null,deps:[],acum:null,acs:[],puntos:[],obs:'',created:Date.now(),updated:Date.now()};
+  deposito:null,deps:[],acum:null,acs:[],lista:null,chk:{},bobs:{},extra:{temp:''},puntos:[],obs:'',created:Date.now(),updated:Date.now()};
 }
 /* adapta fichas guardadas con el formato anterior (un solo depósito / acumulador) */
 function normF(f){
@@ -269,9 +334,11 @@ function normF(f){
   if(!Array.isArray(f.deps)){f.deps=[];if(f.deposito===true&&f.dep)f.deps.push({cant:f.dep.cant||1,cap:f.dep.cap||'',material:f.dep.material||null,limpieza:f.dep.limpieza==null?null:f.dep.limpieza});delete f.dep}
   if(!Array.isArray(f.acs)){f.acs=[];if(f.acum===true&&f.ac)f.acs.push({cant:f.ac.cant||1,cap:f.ac.cap||'',limpieza:f.ac.limpieza==null?null:f.ac.limpieza});delete f.ac}
  }
+ if(f.flow==='seg'){if(!f.chk||typeof f.chk!=='object')f.chk={};if(!f.bobs||typeof f.bobs!=='object')f.bobs={};if(!f.extra||typeof f.extra!=='object')f.extra={temp:''}}
  return f;
 }
 function newPunto(tipo){
+ if(tipo==='temperaturas')return{nom:'',hora:nowHM(),tc:''};
  if(tipo==='quimica')return{nom:'',agua:null,hora:nowHM(),cli:'',clf:'',ph:'',temp:''};
  if(tipo==='termica')return{nom:'',hora:nowHM(),ti:'',tf:''};
  if(tipo==='legionella')return{nom:'',agua:null,an:['leg'],temp:'',cl:'',ph:''};
@@ -286,7 +353,7 @@ const curFicha=()=>S.view==='form'?S.ficha:(S.view==='detail'||S.view==='done')?
 
 /* ========== borrador (en el móvil, a cada cambio) ========== */
 const persistDrafts=()=>{lsSet(LS_DS,drafts)};
-const isBlank=f=>!String(f.instalacion||'').trim()&&!f.tipo&&!(f.puntos||[]).length&&!String(f.obs||'').trim()&&!String(f.responsable||'').trim()&&!String(f.telefono||'').trim()&&!(f.deps||[]).length&&!(f.acs||[]).length&&f.deposito==null&&f.acum==null;
+const isBlank=f=>!String(f.instalacion||'').trim()&&!f.tipo&&!(f.puntos||[]).length&&!String(f.obs||'').trim()&&!String(f.responsable||'').trim()&&!String(f.telefono||'').trim()&&!(f.deps||[]).length&&!(f.acs||[]).length&&f.deposito==null&&f.acum==null&&!f.lista&&!Object.keys(f.chk||{}).length;
 function saveDraft(){
  if(S.view!=='form'||!S.ficha)return;
  const f=S.ficha;
@@ -360,7 +427,7 @@ function pickFld(kind,path,label,unit){
 
 /* ========== pasos ========== */
 function sTipo(f){
- let ts=f.flow==='lim'?instTipos(f).slice():['legionella','piscina','superficies','otras'];
+ let ts=f.flow==='lim'?instTipos(f).slice():f.flow==='seg'?['revision','temperaturas']:['legionella','piscina','superficies','otras'];
  if(f.flow==='lim'&&f.tipo&&!ts.includes(f.tipo))ts.push(f.tipo);
  return '<div class="stack">'+ts.map(t=>{const T=TIPOS[t],on=f.tipo===t;
   return '<button type="button" class="tp'+(on?' on':'')+'" style="--c:'+T.c+';--ct:'+T.t+'" data-act="tipo" data-v="'+t+'"><span class="tpi">'+ico(T.icon,40)+'</span><span class="tpt"><b>'+T.label+'</b>'+(t==='legionella'?'<small>RD 487/2022</small>':'')+'</span>'+(on?ico('check',34):'')+'</button>'}).join('')+'</div>'+
@@ -369,12 +436,26 @@ function sTipo(f){
 function sDatos(f){
  let h=txt('ficha.instalacion','Instalación',{ph:'Nombre de la instalación',cap:'words'});
  h+='<div class="fld"><div class="lab">Fecha</div><input class="in" type="date" data-b="ficha.fecha" value="'+esc(f.fecha||'')+'"></div>';
- h+=timeFld('ficha.hora',f.flow==='lim'?'Hora de inicio':'Hora de la toma de muestras');
- if(f.flow==='lim'){
+ h+=timeFld('ficha.hora',f.flow==='lim'?'Hora de inicio':f.flow==='seg'?'Hora':'Hora de la toma de muestras');
+ if(f.flow==='lim'||f.flow==='seg'){
   h+=txt('ficha.responsable','Responsable',{ph:'Nombre y apellidos',cap:'words'});
-  h+=txt('ficha.telefono','Teléfono',{type:'tel',mode:'tel',ph:'600 000 000'});
+  if(f.flow==='lim')h+=txt('ficha.telefono','Teléfono',{type:'tel',mode:'tel',ph:'600 000 000'});
  }
  return h+'<p class="hint">La fecha y la hora se rellenan solas; puedes cambiarlas.</p>';
+}
+function sLista(f){
+ return '<div class="stack">'+LORDER.map(k=>{const on=f.lista===k;
+  return '<button type="button" class="ch'+(on?' on':'')+'" style="justify-content:flex-start;min-height:68px;text-align:left" data-act="lista" data-v="'+k+'">'+(on?ico('check',24):'')+'<span>'+LISTAS[k].label+'<small>'+(k==='limpieza'?'Limpio / Sucio':'Bien / Mal')+'</small></span></button>'}).join('')+'</div><p class="hint">Elige la lista que vas a revisar. Después hay un paso por cada bloque.</p>';
+}
+function sBlock(f,key){
+ const L=LISTAS[f.lista];if(!L)return '<div class="empty">Primero elige la lista.</div><button type="button" class="btn wide" data-act="goto" data-s="lista">Elegir lista</button>';
+ const i=+key.slice(1),b=L.blocks[i];if(!b)return '';
+ let h='<button type="button" class="btn wide" data-act="chkall" data-i="'+i+'" style="margin-bottom:14px">'+ico('check',24)+' Marcar todo '+esc(L.ok[0])+'</button>';
+ h+=b.items.map((it,j)=>{const k='b'+i+'_'+j,v=(f.chk||{})[k];
+  return '<div class="ck"><div class="ckl">'+esc(it)+'</div><div class="ckb"><button type="button" class="ch ok'+(v==='ok'?' on':'')+'" data-act="chk" data-k="'+k+'" data-v="ok">'+(v==='ok'?ico('check',22):'')+esc(L.ok[0])+'</button><button type="button" class="ch ko'+(v==='ko'?' on':'')+'" data-act="chk" data-k="'+k+'" data-v="ko">'+(v==='ko'?ico('x',22):'')+esc(L.ok[1])+'</button></div></div>'}).join('');
+ if(b.temp)h+=pickFld('tc','ficha.extra.temp','Temperatura','°C');
+ h+='<div class="fld"><div class="lab">'+esc(b.obsLabel||'Observaciones')+'</div><textarea class="in ta" data-b="ficha.bobs.b'+i+'" lang="es" autocapitalize="sentences" placeholder="Escribe aquí si hace falta">'+esc((f.bobs||{})['b'+i]||'')+'</textarea></div>';
+ return h;
 }
 function sInst(f){
  let h='<div class="stack">'+Object.keys(INST).map(k=>{const on=f.tipoInst===k;
@@ -388,14 +469,14 @@ function grpCards(f,key,mat,noun){
  f[key].forEach((g,i)=>{
   const b='ficha.'+key+'.'+i;
   h+='<div class="grp"><div class="grh"><span class="pn">'+(i+1)+'</span><b>Grupo '+(i+1)+'</b>'+(f[key].length>1?'<button type="button" class="ib2 bad" data-act="grpdel" data-k="'+key+'" data-i="'+i+'" aria-label="Quitar grupo '+(i+1)+'">'+ico('trash',24)+'</button>':'')+'</div>'+
-  cntFld(b+'.cant','Cantidad')+numFld(b+'.cap','Capacidad de cada uno','L')+
+  cntFld(b+'.cant','Cantidad')+numFld(b+'.cap','Capacidad de cada uno','L')+txt(b+'.ub','Ubicación',{ph:'Ej.: vestuarios, sala de máquinas, terraza',cap:'sentences'})+
   (mat?'<div class="fld"><div class="lab">Material</div><div class="grid2">'+MATS.map(m=>'<button type="button" class="ch'+(g.material===m?' on':'')+'" data-act="set" data-b="'+b+'.material" data-v="'+esc(m)+'">'+esc(m)+'</button>').join('')+'</div></div>':'')+
   ynFld(b+'.limpieza','¿Se realiza limpieza?')+'</div>';
  });
  return h+'<button type="button" class="btn wide" data-act="grpadd" data-k="'+key+'">'+ico('plus',24)+' Añadir otro '+noun+' (otra capacidad)</button><p class="hint">Si hay '+noun+'s de distinta capacidad, añade un grupo por cada tamaño. Ejemplo: 1 de 80 L, 1 de 100 L y 3 de 200 L son 3 grupos.</p>';
 }
 function sDep(f){
- let h=ynFld('ficha.deposito','¿Hay depósito de agua fría sanitaria?');
+ let h=ynFld('ficha.deposito',noAcu(f)?'¿Hay depósito?':'¿Hay depósito de agua fría sanitaria?');
  if(f.deposito===true)h+=grpCards(f,'deps',true,'depósito');
  return h;
 }
@@ -423,7 +504,8 @@ function missing(f){
  const m=[];
  if(!String(f.instalacion||'').trim())m.push({t:'Falta la instalación',s:'datos'});
  if(!f.tipo)m.push({t:'Falta elegir el tipo',s:'tipo'});
- if(!f.puntos.length)m.push({t:'Añade al menos un punto',s:'pts'});
+ if(f.tipo==='revision'){if(!f.lista)m.push({t:'Falta elegir la lista',s:'lista'})}
+ else if(!f.puntos.length)m.push({t:'Añade al menos un punto',s:'pts'});
  return m;
 }
 function sRes(f){
@@ -434,7 +516,7 @@ function sRes(f){
  }
  return h+summaryHTML(f,true);
 }
-const ST={inst:sInst,tipo:sTipo,datos:sDatos,dep:sDep,acu:sAcu,pts:sPts,obs:sObs,res:sRes};
+const ST={lista:sLista,inst:sInst,tipo:sTipo,datos:sDatos,dep:sDep,acu:sAcu,pts:sPts,obs:sObs,res:sRes};
 
 /* ========== modelo común (resumen, texto, PDF) ========== */
 function pv(d,p,withUnit){
@@ -449,12 +531,13 @@ function pv(d,p,withUnit){
 function datosRows(f){
  const r=[['Instalación',f.instalacion||'—']];
  if(f.flow==='lim')r.push(['Tipo de instalación',instLabel(f)]);
- r.push(['Fecha',fmtDate(f.fecha)],[f.flow==='lim'?'Hora de inicio':'Hora de la toma de muestras',f.hora||'—']);
- if(f.flow==='lim'){r.push(['Responsable',f.responsable||'—']);r.push(['Teléfono',f.telefono||'—'])}
+ r.push(['Fecha',fmtDate(f.fecha)],[f.flow==='lim'?'Hora de inicio':f.flow==='seg'?'Hora':'Hora de la toma de muestras',f.hora||'—']);
+ if(f.flow==='lim'||f.flow==='seg')r.push(['Responsable',f.responsable||'—']);
+ if(f.flow==='lim')r.push(['Teléfono',f.telefono||'—']);
  return r;
 }
-function grpLine(g,mat){return (g.cant||1)+' × '+(g.cap?g.cap+' L':'— L')+(mat?' · '+(g.material||'sin material'):'')+' · Limpieza: '+yn(g.limpieza)}
-function grpTxt(g,mat){return (g.cant||1)+' x '+(g.cap?g.cap+' L':'? L')+(mat?', '+(g.material||'sin material'):'')+', limpieza '+yn(g.limpieza)}
+function grpLine(g,mat){return (g.cant||1)+' × '+(g.cap?g.cap+' L':'— L')+(String(g.ub||'').trim()?' · '+String(g.ub).trim():'')+(mat?' · '+(g.material||'sin material'):'')+' · Limpieza: '+yn(g.limpieza)}
+function grpTxt(g,mat){return (g.cant||1)+' x '+(g.cap?g.cap+' L':'? L')+(String(g.ub||'').trim()?', ubicación '+String(g.ub).trim():'')+(mat?', '+(g.material||'sin material'):'')+', limpieza '+yn(g.limpieza)}
 function depRows(on,arr,mat,noun){
  if(on!==true)return [['¿Hay '+noun+'?',yn(on)]];
  return [['¿Hay '+noun+'?','Sí']].concat((arr||[]).map((g,i)=>['Grupo '+(i+1),grpLine(g,mat)]));
@@ -466,11 +549,17 @@ function section(title,body,step,editable){
 function summaryHTML(f,editable){
  const T=TIPOS[f.tipo];
  let h='';
- if(T)h+='<div class="sm" style="border-color:var(--c);background:var(--ct)"><b style="color:var(--cd);font-size:1.2rem">'+esc(T.full)+'</b></div>';
+ if(T)h+='<div class="sm" style="border-color:var(--c);background:var(--ct)"><b style="color:var(--cd);font-size:1.2rem">'+esc(fullTitle(f))+'</b></div>';
  h+=section('Datos',kvHTML(datosRows(f)),'datos',editable);
  if(f.flow==='lim'){
-  h+=section('Depósitos de agua fría sanitaria',kvHTML(depRows(f.deposito,f.deps,true,'depósito')),'dep',editable);
-  h+=section('Acumuladores de agua caliente sanitaria',kvHTML(depRows(f.acum,f.acs,false,'acumulador')),'acu',editable);
+  h+=section(depTitle(f),kvHTML(depRows(f.deposito,f.deps,true,'depósito')),'dep',editable);
+  if(!noAcu(f))h+=section('Acumuladores de agua caliente sanitaria',kvHTML(depRows(f.acum,f.acs,false,'acumulador')),'acu',editable);
+ }
+ if(f.tipo==='revision'){
+  const bl=revRows(f);let sin=0;
+  bl.forEach(b=>{b.rows.forEach(r=>{if(r[1]==='—'&&r[0]!=='Temperatura')sin++});h+=section(b.t,kvHTML(b.rows)+(b.obs?'<div class="obs" style="margin-top:8px"><b>'+esc(b.obsLabel)+':</b> '+esc(b.obs)+'</div>':''),b.key,editable)});
+  if(sin)h+='<p class="hint">Quedan '+sin+' elementos sin marcar.</p>';
+  return h;
  }
  let pts='';
  if(!f.puntos.length)pts='<p class="muted" style="margin:0">Sin puntos.</p>';
@@ -478,18 +567,22 @@ function summaryHTML(f,editable){
   const defs=PTDEF[f.tipo].filter(d=>d[0]!=='nom');
   return '<div class="ptb"><div class="pth"><span class="pn">'+(i+1)+'</span>'+esc(p.nom||'Sin nombre')+'</div>'+kvHTML(defs.map(d=>[d[1],pv(d,p,true)]))+'</div>';
  }).join('');
- h+=section(f.flow==='lim'?'Mediciones por punto':'Puntos de muestreo',pts,'pts',editable);
+ h+=section(ptsTitle(f),pts,'pts',editable);
  h+=section('Observaciones','<div class="obs">'+(f.obs&&f.obs.trim()?esc(f.obs):'<span class="muted">Sin observaciones.</span>')+'</div>','obs',editable);
  return h;
 }
 function textSummary(f){
  const T=TIPOS[f.tipo]||{full:'Ficha'};
- const L1=['KGS Soluciones - '+T.full,''];
+ const L1=['KGS Soluciones - '+fullTitle(f),''];
  datosRows(f).forEach(r=>L1.push(r[0]+': '+r[1]));
  if(f.flow==='lim'){
   L1.push('');
   L1.push('Depósitos: '+(f.deposito===true?(f.deps||[]).map(g=>grpTxt(g,true)).join(' | ')||'Sí':yn(f.deposito)));
-  L1.push('Acumuladores: '+(f.acum===true?(f.acs||[]).map(g=>grpTxt(g,false)).join(' | ')||'Sí':yn(f.acum)));
+  if(!noAcu(f))L1.push('Acumuladores: '+(f.acum===true?(f.acs||[]).map(g=>grpTxt(g,false)).join(' | ')||'Sí':yn(f.acum)));
+ }
+ if(f.tipo==='revision'){
+  revRows(f).forEach(b=>{L1.push('');L1.push(b.t.toUpperCase());b.rows.forEach(r=>L1.push('- '+r[0]+': '+r[1]));if(b.obs)L1.push(b.obsLabel+': '+b.obs)});
+  L1.push('');L1.push('Técnico: Carlos Javier García (Dpto. Técnico)');return L1.join('\n');
  }
  L1.push('');L1.push(f.flow==='lim'?'Mediciones:':'Puntos:');
  f.puntos.forEach((p,i)=>{
@@ -507,17 +600,17 @@ function histHTML(){
  const arr=Object.values(fichas).filter(f=>f.flow===S.htab&&(!q||norm(f.instalacion).includes(q))).sort((a,b)=>(b.fecha+(b.hora||'')).localeCompare(a.fecha+(a.hora||''))||b.updated-a.updated);
  if(!arr.length){
   const hay=Object.values(fichas).some(f=>f.flow===S.htab);
-  return '<div class="empty">'+(hay?'Ninguna ficha coincide con la búsqueda.':S.htab==='lim'?'Todavía no hay limpiezas y desinfecciones guardadas.':'Todavía no hay tomas de muestras guardadas.')+'</div>';
+  return '<div class="empty">'+(hay?'Ninguna ficha coincide con la búsqueda.':S.htab==='lim'?'Todavía no hay limpiezas y desinfecciones guardadas.':S.htab==='seg'?'Todavía no hay fichas de seguridad alimentaria guardadas.':'Todavía no hay tomas de muestras guardadas.')+'</div>';
  }
  return arr.map(f=>{const T=TIPOS[f.tipo]||TIPOS.quimica;
-  return '<button type="button" class="item" data-act="open" data-id="'+esc(f.id)+'" style="--c:'+T.c+';--ct:'+T.t+';--cd:'+T.d+'"><span class="ib">'+ico(T.icon,26)+'</span><span class="it"><b>'+esc(f.instalacion||'Sin nombre')+'</b><span>'+fmtDate(f.fecha)+' · '+T.short+'</span></span>'+ico('right',22)+'</button>';
+  return '<button type="button" class="item" data-act="open" data-id="'+esc(f.id)+'" style="--c:'+T.c+';--ct:'+T.t+';--cd:'+T.d+'"><span class="ib">'+ico(T.icon,26)+'</span><span class="it"><b>'+esc(f.instalacion||'Sin nombre')+'</b><span>'+fmtDate(f.fecha)+' · '+esc(shortOf(f))+'</span></span>'+ico('right',22)+'</button>';
  }).join('');
 }
 function draftsHTML(){
  const arr=Object.values(drafts).filter(d=>d&&d.f).sort((a,b)=>(b.t||0)-(a.t||0));
  if(!arr.length)return '';
- return '<h2 class="sec">En curso</h2>'+arr.map(d=>{const f=d.f,T=TIPOS[f.tipo],n=STEPS[f.flow].length;
-  const what=T?T.short:(f.flow==='lim'?'Limpieza y desinfección':'Toma de muestras');
+ return '<h2 class="sec">En curso</h2>'+arr.map(d=>{const f=d.f,T=TIPOS[f.tipo],n=stepsOf(f).length;
+  const what=T?shortOf(f):(f.flow==='lim'?'Limpieza y desinfección':f.flow==='seg'?'Seguridad alimentaria':'Toma de muestras');
   const st=fichas[f.id]?'editando':'paso '+(Math.min(d.step||0,n-1)+1)+' de '+n;
   return '<div class="dr" style="--c:'+(T?T.c:'#0B1220')+'"><button type="button" class="drb" data-act="resume" data-id="'+esc(f.id)+'"><b>'+esc(f.instalacion||'Sin nombre')+'</b><span>'+esc(what)+' · '+st+' · toca para continuar</span></button><button type="button" class="ib2 bad" data-act="discard" data-id="'+esc(f.id)+'" aria-label="Descartar ficha en curso">'+ico('trash',24)+'</button></div>';
  }).join('');
@@ -529,9 +622,10 @@ function vHome(){
  '<main class="pad">'+hint+
  '<button type="button" class="big" data-act="new" data-flow="lim"><span class="chips">'+chipHTML('quimica')+chipHTML('termica')+'</span><span class="bt">Limpieza y desinfección</span>'+ico('right',30)+'</button>'+
  '<button type="button" class="big" data-act="new" data-flow="mue"><span class="chips">'+chipHTML('legionella')+chipHTML('piscina')+'</span><span class="bt">Toma de muestras</span>'+ico('right',30)+'</button>'+
+ '<button type="button" class="big" data-act="new" data-flow="seg"><span class="chips">'+chipHTML('revision')+chipHTML('temperaturas')+'</span><span class="bt">Seguridad alimentaria</span>'+ico('right',30)+'</button>'+
  draftsHTML()+
  '<h2 class="sec">Historial</h2>'+
- '<div class="tabs" role="tablist"><button type="button" role="tab" class="'+(S.htab==='lim'?'on':'')+'" data-act="htab" data-v="lim">Limpieza y desinfección</button><button type="button" role="tab" class="'+(S.htab==='mue'?'on':'')+'" data-act="htab" data-v="mue">Toma de muestras</button></div>'+
+ '<div class="tabs" role="tablist"><button type="button" role="tab" class="'+(S.htab==='lim'?'on':'')+'" data-act="htab" data-v="lim">Limpieza y desinfección</button><button type="button" role="tab" class="'+(S.htab==='mue'?'on':'')+'" data-act="htab" data-v="mue">Toma de muestras</button><button type="button" role="tab" class="'+(S.htab==='seg'?'on':'')+'" data-act="htab" data-v="seg">Seguridad alimentaria</button></div>'+
  '<div class="search">'+ico('search',22)+'<input id="q" class="in" type="search" placeholder="Buscar instalación" value="'+esc(S.q)+'" autocomplete="off" enterkeyhint="search"></div>'+
  '<div id="hist">'+histHTML()+'</div>'+
  '<button type="button" class="btn wide" data-act="csv">'+ico('dl',24)+' Descargar todas las fichas (CSV)</button>'+
@@ -541,14 +635,16 @@ function vHome(){
  '</main>';
 }
 function vForm(){
- const f=S.ficha,steps=STEPS[f.flow],n=steps.length,[key,title]=steps[S.step];
+ const f=S.ficha,steps=stepsOf(f),n=steps.length;
+ if(S.step>n-1)S.step=n-1;
+ const [key,title]=steps[S.step];
  const T=TIPOS[f.tipo];
  const bar=steps.map((s,i)=>'<i class="'+(i<=S.step?'on':'')+'"></i>').join('');
  const last=S.step===n-1;
- const off=key==='tipo'&&!f.tipo;
+ const off=(key==='tipo'&&!f.tipo)||(key==='lista'&&!f.lista);
  const nextBtn=last?'<button type="button" class="btn pri'+(missing(f).length?' off':'')+'" data-act="save">'+ico('share',24)+' Guardar y compartir</button>':'<button type="button" class="btn pri'+(off?' off':'')+'" data-act="next">Siguiente '+ico('right',24)+'</button>';
  return '<header class="top"><div class="in-w"><div class="row"><button type="button" class="hx" data-act="exit" aria-label="Salir al inicio">'+ico('x',26)+'</button><span class="stp">Paso '+(S.step+1)+' de '+n+'</span>'+(T?'<span class="tg">'+T.label+'</span>':'')+'</div><div class="bar">'+bar+'</div><h1>'+title+'</h1></div></header>'+
- '<main class="pad form">'+ST[key](f)+'</main>'+
+ '<main class="pad form">'+(ST[key]||sBlock)(f,key)+'</main>'+
  '<nav class="nav"><button type="button" class="btn" data-act="back">'+ico('left',24)+' Atrás</button>'+nextBtn+'</nav>';
 }
 function vDetail(){
@@ -559,14 +655,14 @@ function vDetail(){
  '<main class="pad form">'+summaryHTML(f,false)+'<button type="button" class="btn bad wide" data-act="del" data-id="'+esc(f.id)+'">'+ico('trash',24)+' Borrar ficha</button></main>'+
  '<nav class="nav"><button type="button" class="btn" data-act="edit" data-id="'+esc(f.id)+'">'+ico('edit',24)+' Editar</button><button type="button" class="btn pri" data-act="share" data-id="'+esc(f.id)+'">'+ico('share',24)+' Compartir</button></nav>';
 }
-function pdfName(f){const T=TIPOS[f.tipo];return T.file+'_'+slug(f.instalacion)+'_'+(f.fecha||todayISO())+'.pdf'}
+function pdfName(f){const T=TIPOS[f.tipo];return T.file+(f.tipo==='revision'&&LISTAS[f.lista]?'_'+LISTAS[f.lista].file:'')+'_'+slug(f.instalacion)+'_'+(f.fecha||todayISO())+'.pdf'}
 function vDone(){
  const f=fichas[S.id];
  if(!f){S.view='home';return vHome()}
  const T=TIPOS[f.tipo];
  const ready=!!S.pdf;
  const state=S.pdf?'':S.pdfErr?'<div class="warn"><h3>'+ico('warn',26)+' No se pudo crear el PDF</h3><p style="margin:0 0 10px">La ficha está guardada. Comprueba la conexión e inténtalo de nuevo.</p><button type="button" class="btn wide" data-act="retrypdf">Reintentar PDF</button></div>':'<p class="center muted">Generando PDF…</p>';
- return '<header class="top"><div class="in-w"><div class="row"><button type="button" class="hx" data-act="home" aria-label="Volver al inicio">'+ico('left',26)+'</button><span class="stp">'+(S.fromSave?'Ficha guardada':'Compartir ficha')+'</span></div><h1 style="margin-top:8px">'+esc(T.full)+'</h1></div></header>'+
+ return '<header class="top"><div class="in-w"><div class="row"><button type="button" class="hx" data-act="home" aria-label="Volver al inicio">'+ico('left',26)+'</button><span class="stp">'+(S.fromSave?'Ficha guardada':'Compartir ficha')+'</span></div><h1 style="margin-top:8px">'+esc(fullTitle(f))+'</h1></div></header>'+
  '<main class="pad">'+
  (S.fromSave?'<div class="ok">'+ico('check',46)+'</div><p class="center strong" style="margin:0 0 4px">Guardada en el historial</p>':'')+
  '<p class="center muted" style="margin:0">'+esc(f.instalacion||'Sin nombre')+' · '+fmtDate(f.fecha)+'</p>'+
@@ -608,6 +704,11 @@ function sheetFields(){
   h+=txt('pt.nom','Nombre del punto',{ph:'Ej.: Ducha habitación 12',cap:'sentences'});
   h+=timeFld('pt.hora','Hora de la medición');
   h+=pickFld('t','pt.ti','Temperatura inicial','°C')+pickFld('t','pt.tf','Temperatura final','°C');
+ }else if(t==='temperaturas'){
+  h+=txt('pt.nom','Equipo o punto',{ph:'Ej.: Cámara frigorífica 1',cap:'sentences'});
+  h+=timeFld('pt.hora','Hora de la medición');
+  h+=pickFld('tc','pt.tc','Temperatura','°C');
+  h+='<div class="fld"><div class="lab">Atajos</div><div class="grid2"><button type="button" class="ch" data-act="set" data-b="pt.tc" data-v="4,0">Frío: 4,0 °C</button><button type="button" class="ch" data-act="set" data-b="pt.tc" data-v="-18,0">Congelado: −18,0 °C</button></div></div>';
  }else if(t==='legionella'){
   h+=txt('pt.nom','Punto de muestreo',{ph:'Ej.: Retorno ACS',cap:'sentences'});
   h+=aguaFld()+anFld();
@@ -690,7 +791,7 @@ function makePDF(f){
   doc.setDrawColor(...C);doc.setLineWidth(0.7);doc.line(M,34,W-M,34);
  };
  doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(...D);
- doc.text(ps(T.full),M,43);
+ doc.text(doc.splitTextToSize(ps(fullTitle(f)),W-2*M)[0],M,43);
  doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(60,70,85);
  doc.text(doc.splitTextToSize(ps((f.instalacion||'Sin nombre')+'  ·  '+fmtDate(f.fecha)),W-2*M)[0],M,49.5);
  let y=55;
@@ -700,20 +801,30 @@ function makePDF(f){
  const kv=(title,rows)=>{
   doc.autoTable({...base,startY:y,head:[[titleCell(title,2)]],body:rows.map(r=>[ps(r[0]),ps(r[1])]),columnStyles:{0:{fontStyle:'bold',cellWidth:60,fillColor:[240,243,247]}}});after();
  };
- kv('Datos generales',[['Tipo de trabajo',T.full],...datosRows(f)]);
+ kv('Datos generales',[['Tipo de trabajo',fullTitle(f)],...datosRows(f)]);
  if(f.flow==='lim'){
   const grpTable=(title,on,arr,mat,noun)=>{
    if(on!==true||!(arr||[]).length){kv(title,[['¿Hay '+noun+'?',yn(on)]]);return}
-   const cols=['Grupo','Cantidad','Capacidad (L)'].concat(mat?['Material']:[]).concat(['¿Limpieza?']);
-   const hr=cols.map((c,i)=>({content:c,styles:{fillColor:TT,textColor:D,fontStyle:'bold',halign:i===3&&mat?'left':'center',fontSize:9}}));
-   const bd=arr.map((g,i)=>[String(i+1),String(g.cant||1),ps(g.cap||'-')].concat(mat?[ps(g.material||'-')]:[]).concat([ps(yn(g.limpieza))]));
-   const cs={0:{cellWidth:18,halign:'center'},1:{halign:'center'},2:{halign:'center'}};
+   const cols=['Grupo','Cantidad','Capacidad (L)','Ubicación'].concat(mat?['Material']:[]).concat(['¿Limpieza?']);
+   const leftC=i=>i===3||(mat&&i===4);
+   const hr=cols.map((c,i)=>({content:c,styles:{fillColor:TT,textColor:D,fontStyle:'bold',halign:leftC(i)?'left':'center',fontSize:9}}));
+   const bd=arr.map((g,i)=>[String(i+1),String(g.cant||1),ps(g.cap||'-'),ps(String(g.ub||'').trim()||'-')].concat(mat?[ps(g.material||'-')]:[]).concat([ps(yn(g.limpieza))]));
+   const cs={0:{cellWidth:16,halign:'center'},1:{halign:'center'},2:{halign:'center'}};
    cs[cols.length-1]={halign:'center'};
    doc.autoTable({...base,startY:y,head:[[titleCell(title,cols.length)],hr],body:bd,columnStyles:cs});after();
   };
-  grpTable('Depósitos de agua fría sanitaria',f.deposito,f.deps,true,'depósito');
-  grpTable('Acumuladores de agua caliente sanitaria',f.acum,f.acs,false,'acumulador');
+  grpTable(depTitle(f),f.deposito,f.deps,true,'depósito');
+  if(!noAcu(f))grpTable('Acumuladores de agua caliente sanitaria',f.acum,f.acs,false,'acumulador');
  }
+ if(f.tipo==='revision'){
+  const LL=LISTAS[f.lista]||{ok:['Bien','Mal']};
+  revRows(f).forEach(b=>{
+   const body=b.rows.map(r=>[ps(r[0]),{content:ps(r[1]),styles:{halign:'center',fontStyle:'bold',textColor:r[1]===LL.ok[1]?[185,28,28]:r[1]===LL.ok[0]?[21,128,61]:[110,120,135]}}]);
+   if(b.obs)body.push([{content:ps(b.obsLabel+': '+b.obs),colSpan:2,styles:{fontStyle:'italic'}}]);
+   const hh=['Elemento','Estado'].map((c,i)=>({content:c,styles:{fillColor:TT,textColor:D,fontStyle:'bold',halign:i?'center':'left',fontSize:9}}));
+   doc.autoTable({...base,startY:y,head:[[titleCell(b.t,2)],hh],body,styles:{...base.styles,fontSize:9,cellPadding:1.6},columnStyles:{1:{cellWidth:40}}});after();
+  });
+ }else{
  const defs=PTDEF[f.tipo];
  const cols=[['Nº','']].concat(defs.map(d=>[d[1],d[0]==='agua'?'':d[2]]));
  const leftK=k=>k==='nom'||k==='agua'||k==='an'||/^p[1-3]$/.test(k)||k==='ta';
@@ -721,8 +832,9 @@ function makePDF(f){
  const body=f.puntos.map((p,i)=>[String(i+1)].concat(defs.map(d=>ps(pv(d,p,false)))));
  const cs={0:{cellWidth:9,halign:'center'}};
  defs.forEach((d,i)=>{if(!leftK(d[0]))cs[i+1]={halign:'center'}});
- doc.autoTable({...base,startY:y,head:[[titleCell(f.flow==='lim'?'Mediciones por punto':'Puntos de muestreo',cols.length)],headRow],body,columnStyles:cs,styles:{...base.styles,fontSize:f.tipo==='piscina'?8.5:9.5,cellPadding:f.tipo==='piscina'?1.8:2.2}});after();
+ doc.autoTable({...base,startY:y,head:[[titleCell(ptsTitle(f),cols.length)],headRow],body,columnStyles:cs,styles:{...base.styles,fontSize:f.tipo==='piscina'?8.5:9.5,cellPadding:f.tipo==='piscina'?1.8:2.2}});after();
  doc.autoTable({...base,startY:y,head:[[titleCell('Observaciones',1)]],body:[[ps(f.obs&&f.obs.trim()?f.obs.trim():'Sin observaciones.')]]});
+ }
  const n=doc.getNumberOfPages(),stamp=fmtDate(todayISO())+' '+nowHM();
  for(let i=1;i<=n;i++){
   doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(110,120,135);
@@ -761,13 +873,14 @@ async function copyText(t){
  await dialog({title:'Copiar resumen',html:'<textarea readonly id="cp">'+esc(t)+'</textarea>',btns:[{l:'Cerrar',v:1}]});
 }
 function csvAll(){
- const H=['ID','Trabajo','Instalación','Tipo de instalación','Fecha','Hora','Responsable','Teléfono','Depósito','Depósitos (detalle)','Acumulador','Acumuladores (detalle)','Nº punto','Punto','Tipo de agua','Análisis','Hora medición','Cloro inicial (ppm)','Cloro final (ppm)','pH','Temperatura (°C)','Temperatura inicial (°C)','Temperatura final (°C)','Cloro (ppm)','Cloro libre (ppm)','Cloro residual (ppm)','Cloro total (ppm)','Turbidez (UNF)','Transparencia','Ácido isocianúrico (mg/L)','Parámetro 1','Parámetro 2','Observaciones'];
+ const H=['ID','Trabajo','Instalación','Tipo de instalación','Fecha','Hora','Responsable','Teléfono','Depósito','Depósitos (detalle)','Acumulador','Acumuladores (detalle)','Nº punto','Punto','Tipo de agua','Análisis','Hora medición','Cloro inicial (ppm)','Cloro final (ppm)','pH','Temperatura (°C)','Temperatura inicial (°C)','Temperatura final (°C)','Cloro (ppm)','Cloro libre (ppm)','Cloro residual (ppm)','Cloro total (ppm)','Turbidez (UNF)','Transparencia','Ácido isocianúrico (mg/L)','Parámetro 1','Parámetro 2','Lista','Bloque','Elemento','Estado','Observaciones del bloque','Observaciones'];
  const MAP={
   quimica:{nom:'Punto',agua:'Tipo de agua',hora:'Hora medición',cli:'Cloro inicial (ppm)',clf:'Cloro final (ppm)',ph:'pH',temp:'Temperatura (°C)'},
   termica:{nom:'Punto',hora:'Hora medición',ti:'Temperatura inicial (°C)',tf:'Temperatura final (°C)'},
   legionella:{nom:'Punto',agua:'Tipo de agua',an:'Análisis',temp:'Temperatura (°C)',cl:'Cloro (ppm)',ph:'pH'},
   superficies:{nom:'Punto',an:'Análisis'},
   otras:{nom:'Punto',ta:'Análisis',p1:'Parámetro 1',p2:'Parámetro 2'},
+  temperaturas:{nom:'Punto',hora:'Hora medición',tc:'Temperatura (°C)'},
   piscina:{nom:'Punto',clL:'Cloro libre (ppm)',clR:'Cloro residual (ppm)',clT:'Cloro total (ppm)',ph:'pH',turb:'Turbidez (UNF)',transp:'Transparencia',cya:'Ácido isocianúrico (mg/L)'}
  };
  const q=v=>{v=String(v==null?'':v);return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
@@ -775,12 +888,18 @@ function csvAll(){
  Object.values(fichas).sort((a,b)=>(a.fecha+(a.hora||'')).localeCompare(b.fecha+(b.hora||''))).forEach(f=>{
   const T=TIPOS[f.tipo]||{short:''};
   const lim=f.flow==='lim';
-  const baseR={ID:f.id,Trabajo:T.short,'Instalación':f.instalacion,'Tipo de instalación':lim?instLabel(f):'',Fecha:fmtDate(f.fecha),Hora:f.hora,Responsable:lim?f.responsable:'','Teléfono':lim?f.telefono:'',Observaciones:f.obs};
+  const seg=f.flow==='seg';
+  const baseR={ID:f.id,Trabajo:shortOf(f),'Instalación':f.instalacion,'Tipo de instalación':lim?instLabel(f):'',Fecha:fmtDate(f.fecha),Hora:f.hora,Responsable:(lim||seg)?f.responsable:'','Teléfono':lim?f.telefono:'',Observaciones:f.obs};
   if(lim){
    baseR['Depósito']=yn(f.deposito);
    if(f.deposito===true)baseR['Depósitos (detalle)']=(f.deps||[]).map(g=>grpTxt(g,true)).join(' | ');
-   baseR['Acumulador']=yn(f.acum);
-   if(f.acum===true)baseR['Acumuladores (detalle)']=(f.acs||[]).map(g=>grpTxt(g,false)).join(' | ');
+   if(!noAcu(f)){baseR['Acumulador']=yn(f.acum);}
+   if(!noAcu(f)&&f.acum===true)baseR['Acumuladores (detalle)']=(f.acs||[]).map(g=>grpTxt(g,false)).join(' | ');
+  }
+  if(f.tipo==='revision'){
+   const LL=LISTAS[f.lista];
+   revRows(f).forEach(b=>{b.rows.forEach((r,ix)=>{const rr=Object.assign({},baseR,{Lista:LL?LL.label:'',Bloque:b.t,Elemento:r[0],Estado:r[1]==='—'?'':r[1],'Observaciones del bloque':ix===0?b.obs:'',Observaciones:''});rows.push(H.map(h=>q(rr[h])))})});
+   return;
   }
   const list=f.puntos.length?f.puntos:[null];
   list.forEach((p,i)=>{
@@ -796,11 +915,14 @@ function csvAll(){
 function startForm(f,step){S.ficha=f;S.step=step;S.pt=null;S.ptIdx=-1;S.view='form';saveDraft();render()}
 function resumeDraft(id){
  const d=drafts[id];if(!d)return;
- S.ficha=normF(d.f);S.step=Math.min(d.step||0,STEPS[d.f.flow].length-1);S.pt=d.pt||null;S.ptIdx=d.ptIdx==null?-1:d.ptIdx;S.view='form';render();
+ S.ficha=normF(d.f);S.step=Math.min(d.step||0,stepsOf(S.ficha).length-1);S.pt=d.pt||null;S.ptIdx=d.ptIdx==null?-1:d.ptIdx;S.view='form';render();
 }
 const parseV=v=>v==='true'?true:v==='false'?false:v;
 const acts={
  new(el){startForm(newFicha(el.dataset.flow),0)},
+ lista(el){const f=S.ficha,v=el.dataset.v;if(f.lista!==v){f.lista=v;f.chk={};f.bobs={};f.extra={temp:''}}saveDraft();render(true)},
+ chk(el){const f=S.ficha,k=el.dataset.k,v=el.dataset.v;f.chk=f.chk||{};if(f.chk[k]===v)delete f.chk[k];else f.chk[k]=v;touchDraft();refresh()},
+ chkall(el){const f=S.ficha,i=+el.dataset.i,b=LISTAS[f.lista].blocks[i];f.chk=f.chk||{};b.items.forEach((x,j)=>{f.chk['b'+i+'_'+j]='ok'});touchDraft();refresh()},
  resume(el){resumeDraft(el.dataset.id)},
  async discard(el){const id=el.dataset.id,d=drafts[id];if(await confirmBox('¿Descartar esta ficha en curso?',((d&&d.f&&d.f.instalacion)||'Sin nombre')+': se perderán los datos que no hayas guardado.','Descartar')){clearDraft(id);render(true)}},
  htab(el){S.htab=el.dataset.v;render(true)},
@@ -808,9 +930,9 @@ const acts={
  set(el){
   set(el.dataset.b,parseV(el.dataset.v));
   const f=S.ficha;
-  if(f&&el.dataset.b==='ficha.deposito'&&f.deposito===true&&!f.deps.length)f.deps.push({cant:1,cap:'',material:null,limpieza:null});
+  if(f&&el.dataset.b==='ficha.deposito'&&f.deposito===true&&!f.deps.length)f.deps.push({cant:1,cap:'',ub:'',material:null,limpieza:null});
   if(f&&el.dataset.b==='ficha.tipoInst'){const al=instTipos(f);if(f.tipo&&!al.includes(f.tipo))f.tipo=null;if(al.length===1)f.tipo=al[0]}
-  if(f&&el.dataset.b==='ficha.acum'&&f.acum===true&&!f.acs.length)f.acs.push({cant:1,cap:'',limpieza:null});
+  if(f&&el.dataset.b==='ficha.acum'&&f.acum===true&&!f.acs.length)f.acs.push({cant:1,cap:'',ub:'',limpieza:null});
   touchDraft();refresh();
  },
  tog(el){
@@ -819,7 +941,7 @@ const acts={
   set(el.dataset.b,ANA.filter(k=>a.includes(k)));touchDraft();refresh();
  },
  an3(){set('pt.an',(S.ficha.tipo==='superficies'?ANS:ANO).slice());touchDraft();refresh()},
- grpadd(el){const k=el.dataset.k;S.ficha[k].push(k==='deps'?{cant:1,cap:'',material:null,limpieza:null}:{cant:1,cap:'',limpieza:null});saveDraft();render(true)},
+ grpadd(el){const k=el.dataset.k;S.ficha[k].push(k==='deps'?{cant:1,cap:'',ub:'',material:null,limpieza:null}:{cant:1,cap:'',ub:'',limpieza:null});saveDraft();render(true)},
  async grpdel(el){
   const k=el.dataset.k,i=+el.dataset.i;
   if(await confirmBox('¿Quitar el grupo '+(i+1)+'?','Se borrarán sus datos.','Quitar grupo')){S.ficha[k].splice(i,1);saveDraft();render(true)}
@@ -836,10 +958,12 @@ const acts={
   const o=document.querySelector('output[data-o="'+p+'"]');if(o)o.textContent=v;touchDraft();
  },
  now(el){const v=nowHM();set(el.dataset.b,v);const i=document.querySelector('input[data-b="'+el.dataset.b+'"]');if(i)i.value=v;touchDraft()},
- goto(el){const i=STEPS[S.ficha.flow].findIndex(s=>s[0]===el.dataset.s);if(i>=0){S.step=i;if(S.pt){S.pt=null;S.ptIdx=-1}saveDraft();render()}},
+ goto(el){const i=stepsOf(S.ficha).findIndex(s=>s[0]===el.dataset.s);if(i>=0){S.step=i;if(S.pt){S.pt=null;S.ptIdx=-1}saveDraft();render()}},
  next(){
   const f=S.ficha;
-  if(STEPS[f.flow][S.step][0]==='tipo'&&!f.tipo){toast('Elige un tipo para continuar');return}
+  const sk=stepsOf(f)[S.step][0];
+  if(sk==='tipo'&&!f.tipo){toast('Elige un tipo para continuar');return}
+  if(sk==='lista'&&!f.lista){toast('Elige una lista para continuar');return}
   S.step++;saveDraft();render();
  },
  back(){if(S.step===0){acts.exit();return}S.step--;saveDraft();render()},
@@ -856,7 +980,7 @@ const acts={
  save(){finishSave()},
  open(el){S.id=el.dataset.id;S.view='detail';render()},
  edit(el){
-  const f=clone(fichas[el.dataset.id]);startForm(f,STEPS[f.flow].length-1);
+  const f=clone(fichas[el.dataset.id]);startForm(f,stepsOf(f).length-1);
  },
  async del(el){if(await confirmBox('¿Borrar esta ficha?','Se eliminará del historial y no se podrá recuperar.','Borrar ficha')){deleteFicha(el.dataset.id);S.view='home';render();toast('Ficha borrada')}},
  share(el){S.id=el.dataset.id;S.fromSave=false;S.view='done';render();genPDF(fichas[S.id])},

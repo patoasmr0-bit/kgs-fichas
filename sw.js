@@ -1,5 +1,5 @@
 /* KGS Fichas: funciona sin cobertura. Sube VERSION al publicar cambios. */
-const VERSION='kgs-v2';
+const VERSION='kgs-v3';
 const SHELL=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png','vendor/jspdf.umd.min.js','vendor/jspdf.plugin.autotable.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
