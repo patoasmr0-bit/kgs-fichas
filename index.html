@@ -438,7 +438,7 @@ function sDatos(f){
  h+='<div class="fld"><div class="lab">Fecha</div><input class="in" type="date" data-b="ficha.fecha" value="'+esc(f.fecha||'')+'"></div>';
  h+=timeFld('ficha.hora',f.flow==='lim'?'Hora de inicio':f.flow==='seg'?'Hora':'Hora de la toma de muestras');
  if(f.flow==='lim'||f.flow==='seg'){
-  h+=txt('ficha.responsable','Responsable',{ph:'Nombre y apellidos',cap:'words'});
+  h+=txt('ficha.responsable','Persona de contacto',{ph:'Nombre y apellidos',cap:'words'});
   if(f.flow==='lim')h+=txt('ficha.telefono','Teléfono',{type:'tel',mode:'tel',ph:'600 000 000'});
  }
  return h+'<p class="hint">La fecha y la hora se rellenan solas; puedes cambiarlas.</p>';
@@ -532,7 +532,7 @@ function datosRows(f){
  const r=[['Instalación',f.instalacion||'—']];
  if(f.flow==='lim')r.push(['Tipo de instalación',instLabel(f)]);
  r.push(['Fecha',fmtDate(f.fecha)],[f.flow==='lim'?'Hora de inicio':f.flow==='seg'?'Hora':'Hora de la toma de muestras',f.hora||'—']);
- if(f.flow==='lim'||f.flow==='seg')r.push(['Responsable',f.responsable||'—']);
+ if(f.flow==='lim'||f.flow==='seg')r.push(['Persona de contacto',f.responsable||'—']);
  if(f.flow==='lim')r.push(['Teléfono',f.telefono||'—']);
  return r;
 }
@@ -873,7 +873,7 @@ async function copyText(t){
  await dialog({title:'Copiar resumen',html:'<textarea readonly id="cp">'+esc(t)+'</textarea>',btns:[{l:'Cerrar',v:1}]});
 }
 function csvAll(){
- const H=['ID','Trabajo','Instalación','Tipo de instalación','Fecha','Hora','Responsable','Teléfono','Depósito','Depósitos (detalle)','Acumulador','Acumuladores (detalle)','Nº punto','Punto','Tipo de agua','Análisis','Hora medición','Cloro inicial (ppm)','Cloro final (ppm)','pH','Temperatura (°C)','Temperatura inicial (°C)','Temperatura final (°C)','Cloro (ppm)','Cloro libre (ppm)','Cloro residual (ppm)','Cloro total (ppm)','Turbidez (UNF)','Transparencia','Ácido isocianúrico (mg/L)','Parámetro 1','Parámetro 2','Lista','Bloque','Elemento','Estado','Observaciones del bloque','Observaciones'];
+ const H=['ID','Trabajo','Instalación','Tipo de instalación','Fecha','Hora','Persona de contacto','Teléfono','Depósito','Depósitos (detalle)','Acumulador','Acumuladores (detalle)','Nº punto','Punto','Tipo de agua','Análisis','Hora medición','Cloro inicial (ppm)','Cloro final (ppm)','pH','Temperatura (°C)','Temperatura inicial (°C)','Temperatura final (°C)','Cloro (ppm)','Cloro libre (ppm)','Cloro residual (ppm)','Cloro total (ppm)','Turbidez (UNF)','Transparencia','Ácido isocianúrico (mg/L)','Parámetro 1','Parámetro 2','Lista','Bloque','Elemento','Estado','Observaciones del bloque','Observaciones'];
  const MAP={
   quimica:{nom:'Punto',agua:'Tipo de agua',hora:'Hora medición',cli:'Cloro inicial (ppm)',clf:'Cloro final (ppm)',ph:'pH',temp:'Temperatura (°C)'},
   termica:{nom:'Punto',hora:'Hora medición',ti:'Temperatura inicial (°C)',tf:'Temperatura final (°C)'},
@@ -889,7 +889,7 @@ function csvAll(){
   const T=TIPOS[f.tipo]||{short:''};
   const lim=f.flow==='lim';
   const seg=f.flow==='seg';
-  const baseR={ID:f.id,Trabajo:shortOf(f),'Instalación':f.instalacion,'Tipo de instalación':lim?instLabel(f):'',Fecha:fmtDate(f.fecha),Hora:f.hora,Responsable:(lim||seg)?f.responsable:'','Teléfono':lim?f.telefono:'',Observaciones:f.obs};
+  const baseR={ID:f.id,Trabajo:shortOf(f),'Instalación':f.instalacion,'Tipo de instalación':lim?instLabel(f):'',Fecha:fmtDate(f.fecha),Hora:f.hora,'Persona de contacto':(lim||seg)?f.responsable:'','Teléfono':lim?f.telefono:'',Observaciones:f.obs};
   if(lim){
    baseR['Depósito']=yn(f.deposito);
    if(f.deposito===true)baseR['Depósitos (detalle)']=(f.deps||[]).map(g=>grpTxt(g,true)).join(' | ');
