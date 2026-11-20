@@ -262,23 +262,28 @@ function stepsOf(f){
  if(f.flow==='seg'){
   if(f.tipo==='revision'){
    const a=[['tipo','Tipo de trabajo'],['datos','Datos de la instalación'],['lista','Lista de revisión']];
-   if(f.lista&&LISTAS[f.lista])LISTAS[f.lista].blocks.forEach((b,i)=>a.push(['b'+i,b.t]));
+   LORDER.filter(k=>(f.listas||[]).includes(k)).forEach(k=>LISTAS[k].blocks.forEach((b,i)=>a.push([k+'_'+i,b.t])));
    a.push(['res','Resumen']);return a;
   }
   if(f.tipo==='temperaturas')return [['tipo','Tipo de trabajo'],['datos','Datos de la instalación'],['pts','Equipos y temperaturas'],['obs','Observaciones'],['res','Resumen']];
  }
  return STEPS[f.flow];
 }
-const fullTitle=f=>{const T=TIPOS[f.tipo]||{full:'Ficha'};return T.full+(f.tipo==='revision'&&LISTAS[f.lista]?': '+LISTAS[f.lista].label:'')};
-const shortOf=f=>{const T=TIPOS[f.tipo]||TIPOS.quimica;return T.short+(f.tipo==='revision'&&LISTAS[f.lista]?' · '+LISTAS[f.lista].label:'')};
+const oneLista=f=>f.tipo==='revision'&&Array.isArray(f.listas)&&f.listas.length===1&&LISTAS[f.listas[0]]?f.listas[0]:null;
+const fullTitle=f=>{const T=TIPOS[f.tipo]||{full:'Ficha'};return T.full+(oneLista(f)?': '+LISTAS[oneLista(f)].label:'')};
+const shortOf=f=>{const T=TIPOS[f.tipo]||TIPOS.quimica;return T.short+(oneLista(f)?' · '+LISTAS[oneLista(f)].label:'')};
 const ptsTitle=f=>f.flow==='lim'?'Mediciones por punto':f.flow==='seg'?'Equipos y temperaturas':'Puntos de muestreo';
 function revRows(f){
- const L=LISTAS[f.lista];if(!L)return [];
- return L.blocks.map((b,i)=>{
-  const rows=b.items.map((it,j)=>[it,stLabel(L,(f.chk||{})['b'+i+'_'+j])]);
-  if(b.temp)rows.push(['Temperatura',(f.extra&&f.extra.temp)?f.extra.temp+' °C':'—']);
-  return{t:b.t,rows,obs:String((f.bobs||{})['b'+i]||'').trim(),obsLabel:b.obsLabel||'Observaciones',key:'b'+i};
+ const out=[];
+ LORDER.filter(k=>(f.listas||[]).includes(k)).forEach(lk=>{
+  const L=LISTAS[lk];
+  L.blocks.forEach((b,i)=>{
+   const rows=b.items.map((it,j)=>[it,stLabel(L,(f.chk||{})[lk+'_b'+i+'_'+j])]);
+   if(b.temp)rows.push(['Temperatura',(f.extra&&f.extra.temp)?f.extra.temp+' °C':'—']);
+   out.push({lk,list:L.label,L,first:i===0,t:b.t,rows,obs:String((f.bobs||{})[lk+'_b'+i]||'').trim(),obsLabel:b.obsLabel||'Observaciones',key:lk+'_'+i});
+  });
  });
+ return out;
 }
 const AGUA={acs:'Agua caliente sanitaria',afch:'Agua fría de consumo humano'};
 const ANL={leg:'Legionella',aer:'Aerobios',fe:'Hierro',ent:'Enterobacterias',lis:'Listeria'};
@@ -325,7 +330,7 @@ const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
 
 function newFicha(flow){
  return{id:uid(),flow,tipo:null,tipoInst:flow==='lim'?'sanitaria':'',tipoInstOtro:'',instalacion:'',fecha:todayISO(),hora:nowHM(),responsable:'',telefono:'',
-  deposito:null,deps:[],acum:null,acs:[],lista:null,chk:{},bobs:{},extra:{temp:''},puntos:[],obs:'',created:Date.now(),updated:Date.now()};
+  deposito:null,deps:[],acum:null,acs:[],listas:LORDER.slice(),chk:{},bobs:{},extra:{temp:''},puntos:[],obs:'',created:Date.now(),updated:Date.now()};
 }
 /* adapta fichas guardadas con el formato anterior (un solo depósito / acumulador) */
 function normF(f){
@@ -334,7 +339,10 @@ function normF(f){
   if(!Array.isArray(f.deps)){f.deps=[];if(f.deposito===true&&f.dep)f.deps.push({cant:f.dep.cant||1,cap:f.dep.cap||'',material:f.dep.material||null,limpieza:f.dep.limpieza==null?null:f.dep.limpieza});delete f.dep}
   if(!Array.isArray(f.acs)){f.acs=[];if(f.acum===true&&f.ac)f.acs.push({cant:f.ac.cant||1,cap:f.ac.cap||'',limpieza:f.ac.limpieza==null?null:f.ac.limpieza});delete f.ac}
  }
- if(f.flow==='seg'){if(!f.chk||typeof f.chk!=='object')f.chk={};if(!f.bobs||typeof f.bobs!=='object')f.bobs={};if(!f.extra||typeof f.extra!=='object')f.extra={temp:''}}
+ if(f.flow==='seg'){
+  if(f.lista&&!Array.isArray(f.listas)){const pf=f.lista+'_',nc={},nb={};Object.keys(f.chk||{}).forEach(k=>{nc[pf+k]=f.chk[k]});Object.keys(f.bobs||{}).forEach(k=>{nb[pf+k]=f.bobs[k]});f.chk=nc;f.bobs=nb;f.listas=[f.lista];delete f.lista}
+  if(!Array.isArray(f.listas))f.listas=LORDER.slice();
+  if(!f.chk||typeof f.chk!=='object')f.chk={};if(!f.bobs||typeof f.bobs!=='object')f.bobs={};if(!f.extra||typeof f.extra!=='object')f.extra={temp:''}}
  return f;
 }
 function newPunto(tipo){
@@ -353,7 +361,7 @@ const curFicha=()=>S.view==='form'?S.ficha:(S.view==='detail'||S.view==='done')?
 
 /* ========== borrador (en el móvil, a cada cambio) ========== */
 const persistDrafts=()=>{lsSet(LS_DS,drafts)};
-const isBlank=f=>!String(f.instalacion||'').trim()&&!f.tipo&&!(f.puntos||[]).length&&!String(f.obs||'').trim()&&!String(f.responsable||'').trim()&&!String(f.telefono||'').trim()&&!(f.deps||[]).length&&!(f.acs||[]).length&&f.deposito==null&&f.acum==null&&!f.lista&&!Object.keys(f.chk||{}).length;
+const isBlank=f=>!String(f.instalacion||'').trim()&&!f.tipo&&!(f.puntos||[]).length&&!String(f.obs||'').trim()&&!String(f.responsable||'').trim()&&!String(f.telefono||'').trim()&&!(f.deps||[]).length&&!(f.acs||[]).length&&f.deposito==null&&f.acum==null&&!Object.keys(f.chk||{}).length;
 function saveDraft(){
  if(S.view!=='form'||!S.ficha)return;
  const f=S.ficha;
@@ -444,17 +452,17 @@ function sDatos(f){
  return h+'<p class="hint">La fecha y la hora se rellenan solas; puedes cambiarlas.</p>';
 }
 function sLista(f){
- return '<div class="stack">'+LORDER.map(k=>{const on=f.lista===k;
-  return '<button type="button" class="ch'+(on?' on':'')+'" style="justify-content:flex-start;min-height:68px;text-align:left" data-act="lista" data-v="'+k+'">'+(on?ico('check',24):'')+'<span>'+LISTAS[k].label+'</span></button>'}).join('')+'</div><p class="hint">Elige la lista que vas a revisar. Después hay un paso por cada bloque.</p>';
+ return '<div class="stack">'+LORDER.map(k=>{const on=(f.listas||[]).includes(k);
+  return '<button type="button" class="ch'+(on?' on':'')+'" style="justify-content:flex-start;min-height:68px;text-align:left" data-act="ltog" data-v="'+k+'">'+(on?ico('check',24):'')+'<span>'+LISTAS[k].label+'</span></button>'}).join('')+'</div><p class="hint">Todas las listas vienen marcadas. Quita las que hoy no vayas a revisar. Después hay un paso por cada bloque.</p>';
 }
 function sBlock(f,key){
- const L=LISTAS[f.lista];if(!L)return '<div class="empty">Primero elige la lista.</div><button type="button" class="btn wide" data-act="goto" data-s="lista">Elegir lista</button>';
- const i=+key.slice(1),b=L.blocks[i];if(!b)return '';
- let h='<button type="button" class="btn wide" data-act="chkall" data-i="'+i+'" style="margin-bottom:14px">'+ico('check',24)+' Marcar todo '+esc(L.ok[0])+'</button>';
- h+=b.items.map((it,j)=>{const k='b'+i+'_'+j,v=(f.chk||{})[k];
+ const [lk,is]=key.split('_'),L=LISTAS[lk];if(!L)return '';
+ const i=+is,b=L.blocks[i];if(!b)return '';
+ let h='<p class="hint" style="margin:0 0 10px"><b>'+esc(L.label)+'</b></p><button type="button" class="btn wide" data-act="chkall" data-lk="'+lk+'" data-i="'+i+'" style="margin-bottom:14px">'+ico('check',24)+' Marcar todo '+esc(L.ok[0])+'</button>';
+ h+=b.items.map((it,j)=>{const k=lk+'_b'+i+'_'+j,v=(f.chk||{})[k];
   return '<div class="ck"><div class="ckl">'+esc(it)+'</div><div class="ckb"><button type="button" class="ch ok'+(v==='ok'?' on':'')+'" data-act="chk" data-k="'+k+'" data-v="ok">'+(v==='ok'?ico('check',22):'')+esc(L.ok[0])+'</button><button type="button" class="ch ko'+(v==='ko'?' on':'')+'" data-act="chk" data-k="'+k+'" data-v="ko">'+(v==='ko'?ico('x',22):'')+esc(L.ok[1])+'</button></div></div>'}).join('');
  if(b.temp)h+=pickFld('tc','ficha.extra.temp','Temperatura','°C');
- h+='<div class="fld"><div class="lab">'+esc(b.obsLabel||'Observaciones')+'</div><textarea class="in ta" data-b="ficha.bobs.b'+i+'" lang="es" autocapitalize="sentences" placeholder="Escribe aquí si hace falta">'+esc((f.bobs||{})['b'+i]||'')+'</textarea></div>';
+ h+='<div class="fld"><div class="lab">'+esc(b.obsLabel||'Observaciones')+'</div><textarea class="in ta" data-b="ficha.bobs.'+lk+'_b'+i+'" lang="es" autocapitalize="sentences" placeholder="Escribe aquí si hace falta">'+esc((f.bobs||{})[lk+'_b'+i]||'')+'</textarea></div>';
  return h;
 }
 function sInst(f){
@@ -504,7 +512,7 @@ function missing(f){
  const m=[];
  if(!String(f.instalacion||'').trim())m.push({t:'Falta la instalación',s:'datos'});
  if(!f.tipo)m.push({t:'Falta elegir el tipo',s:'tipo'});
- if(f.tipo==='revision'){if(!f.lista)m.push({t:'Falta elegir la lista',s:'lista'})}
+ if(f.tipo==='revision'){if(!(f.listas||[]).length)m.push({t:'Falta elegir alguna lista',s:'lista'})}
  else if(!f.puntos.length)m.push({t:'Añade al menos un punto',s:'pts'});
  return m;
 }
@@ -557,7 +565,7 @@ function summaryHTML(f,editable){
  }
  if(f.tipo==='revision'){
   const bl=revRows(f);let sin=0;
-  bl.forEach(b=>{b.rows.forEach(r=>{if(r[1]==='—'&&r[0]!=='Temperatura')sin++});h+=section(b.t,kvHTML(b.rows)+(b.obs?'<div class="obs" style="margin-top:8px"><b>'+esc(b.obsLabel)+':</b> '+esc(b.obs)+'</div>':''),b.key,editable)});
+  bl.forEach(b=>{b.rows.forEach(r=>{if(r[1]==='—'&&r[0]!=='Temperatura')sin++});if(b.first)h+='<h2 class="sec">'+esc(b.list)+'</h2>';h+=section(b.t,kvHTML(b.rows)+(b.obs?'<div class="obs" style="margin-top:8px"><b>'+esc(b.obsLabel)+':</b> '+esc(b.obs)+'</div>':''),b.key,editable)});
   if(sin)h+='<p class="hint">Quedan '+sin+' elementos sin marcar.</p>';
   return h;
  }
@@ -581,7 +589,7 @@ function textSummary(f){
   if(!noAcu(f))L1.push('Acumuladores: '+(f.acum===true?(f.acs||[]).map(g=>grpTxt(g,false)).join(' | ')||'Sí':yn(f.acum)));
  }
  if(f.tipo==='revision'){
-  revRows(f).forEach(b=>{L1.push('');L1.push(b.t.toUpperCase());b.rows.forEach(r=>L1.push('- '+r[0]+': '+r[1]));if(b.obs)L1.push(b.obsLabel+': '+b.obs)});
+  revRows(f).forEach(b=>{if(b.first){L1.push('');L1.push('== '+b.list.toUpperCase()+' ==')}L1.push('');L1.push(b.t.toUpperCase());b.rows.forEach(r=>L1.push('- '+r[0]+': '+r[1]));if(b.obs)L1.push(b.obsLabel+': '+b.obs)});
   L1.push('');L1.push('Técnico: Carlos Javier García (Dpto. Técnico)');return L1.join('\n');
  }
  L1.push('');L1.push(f.flow==='lim'?'Mediciones:':'Puntos:');
@@ -641,7 +649,7 @@ function vForm(){
  const T=TIPOS[f.tipo];
  const bar=steps.map((s,i)=>'<i class="'+(i<=S.step?'on':'')+'"></i>').join('');
  const last=S.step===n-1;
- const off=(key==='tipo'&&!f.tipo)||(key==='lista'&&!f.lista);
+ const off=(key==='tipo'&&!f.tipo)||(key==='lista'&&!(f.listas||[]).length);
  const nextBtn=last?'<button type="button" class="btn pri'+(missing(f).length?' off':'')+'" data-act="save">'+ico('share',24)+' Guardar y compartir</button>':'<button type="button" class="btn pri'+(off?' off':'')+'" data-act="next">Siguiente '+ico('right',24)+'</button>';
  return '<header class="top"><div class="in-w"><div class="row"><button type="button" class="hx" data-act="exit" aria-label="Salir al inicio">'+ico('x',26)+'</button><span class="stp">Paso '+(S.step+1)+' de '+n+'</span>'+(T?'<span class="tg">'+T.label+'</span>':'')+'</div><div class="bar">'+bar+'</div><h1>'+title+'</h1></div></header>'+
  '<main class="pad form">'+(ST[key]||sBlock)(f,key)+'</main>'+
@@ -655,7 +663,7 @@ function vDetail(){
  '<main class="pad form">'+summaryHTML(f,false)+'<button type="button" class="btn bad wide" data-act="del" data-id="'+esc(f.id)+'">'+ico('trash',24)+' Borrar ficha</button></main>'+
  '<nav class="nav"><button type="button" class="btn" data-act="edit" data-id="'+esc(f.id)+'">'+ico('edit',24)+' Editar</button><button type="button" class="btn pri" data-act="share" data-id="'+esc(f.id)+'">'+ico('share',24)+' Compartir</button></nav>';
 }
-function pdfName(f){const T=TIPOS[f.tipo];return T.file+(f.tipo==='revision'&&LISTAS[f.lista]?'_'+LISTAS[f.lista].file:'')+'_'+slug(f.instalacion)+'_'+(f.fecha||todayISO())+'.pdf'}
+function pdfName(f){const T=TIPOS[f.tipo];return T.file+(oneLista(f)?'_'+LISTAS[oneLista(f)].file:'')+'_'+slug(f.instalacion)+'_'+(f.fecha||todayISO())+'.pdf'}
 function vDone(){
  const f=fichas[S.id];
  if(!f){S.view='home';return vHome()}
@@ -817,12 +825,12 @@ function makePDF(f){
   if(!noAcu(f))grpTable('Acumuladores de agua caliente sanitaria',f.acum,f.acs,false,'acumulador');
  }
  if(f.tipo==='revision'){
-  const LL=LISTAS[f.lista]||{ok:['Bien','Mal']};
   revRows(f).forEach(b=>{
+   const LL=b.L;
    const body=b.rows.map(r=>[ps(r[0]),{content:ps(r[1]),styles:{halign:'center',fontStyle:'bold',textColor:r[1]===LL.ok[1]?[185,28,28]:r[1]===LL.ok[0]?[21,128,61]:[110,120,135]}}]);
    if(b.obs)body.push([{content:ps(b.obsLabel+': '+b.obs),colSpan:2,styles:{fontStyle:'italic'}}]);
    const hh=['Elemento','Estado'].map((c,i)=>({content:c,styles:{fillColor:TT,textColor:D,fontStyle:'bold',halign:i?'center':'left',fontSize:9}}));
-   doc.autoTable({...base,startY:y,head:[[titleCell(b.t,2)],hh],body,styles:{...base.styles,fontSize:9,cellPadding:1.6},columnStyles:{1:{cellWidth:40}}});after();
+   doc.autoTable({...base,startY:y,head:[[titleCell(b.list+': '+b.t,2)],hh],body,styles:{...base.styles,fontSize:9,cellPadding:1.6},columnStyles:{1:{cellWidth:40}}});after();
   });
  }else{
  const defs=PTDEF[f.tipo];
@@ -897,8 +905,7 @@ function csvAll(){
    if(!noAcu(f)&&f.acum===true)baseR['Acumuladores (detalle)']=(f.acs||[]).map(g=>grpTxt(g,false)).join(' | ');
   }
   if(f.tipo==='revision'){
-   const LL=LISTAS[f.lista];
-   revRows(f).forEach(b=>{b.rows.forEach((r,ix)=>{const rr=Object.assign({},baseR,{Lista:LL?LL.label:'',Bloque:b.t,Elemento:r[0],Estado:r[1]==='—'?'':r[1],'Observaciones del bloque':ix===0?b.obs:'',Observaciones:''});rows.push(H.map(h=>q(rr[h])))})});
+   revRows(f).forEach(b=>{b.rows.forEach((r,ix)=>{const rr=Object.assign({},baseR,{Lista:b.list,Bloque:b.t,Elemento:r[0],Estado:r[1]==='—'?'':r[1],'Observaciones del bloque':ix===0?b.obs:'',Observaciones:''});rows.push(H.map(h=>q(rr[h])))})});
    return;
   }
   const list=f.puntos.length?f.puntos:[null];
@@ -920,9 +927,9 @@ function resumeDraft(id){
 const parseV=v=>v==='true'?true:v==='false'?false:v;
 const acts={
  new(el){startForm(newFicha(el.dataset.flow),0)},
- lista(el){const f=S.ficha,v=el.dataset.v;if(f.lista!==v){f.lista=v;f.chk={};f.bobs={};f.extra={temp:''}}saveDraft();render(true)},
+ ltog(el){const f=S.ficha,v=el.dataset.v,a=f.listas||[];f.listas=a.includes(v)?a.filter(x=>x!==v):LORDER.filter(x=>a.includes(x)||x===v);saveDraft();render(true)},
  chk(el){const f=S.ficha,k=el.dataset.k,v=el.dataset.v;f.chk=f.chk||{};if(f.chk[k]===v)delete f.chk[k];else f.chk[k]=v;touchDraft();refresh()},
- chkall(el){const f=S.ficha,i=+el.dataset.i,b=LISTAS[f.lista].blocks[i];f.chk=f.chk||{};b.items.forEach((x,j)=>{f.chk['b'+i+'_'+j]='ok'});touchDraft();refresh()},
+ chkall(el){const f=S.ficha,lk=el.dataset.lk,i=+el.dataset.i,b=LISTAS[lk].blocks[i];f.chk=f.chk||{};b.items.forEach((x,j)=>{f.chk[lk+'_b'+i+'_'+j]='ok'});touchDraft();refresh()},
  resume(el){resumeDraft(el.dataset.id)},
  async discard(el){const id=el.dataset.id,d=drafts[id];if(await confirmBox('¿Descartar esta ficha en curso?',((d&&d.f&&d.f.instalacion)||'Sin nombre')+': se perderán los datos que no hayas guardado.','Descartar')){clearDraft(id);render(true)}},
  htab(el){S.htab=el.dataset.v;render(true)},
@@ -963,7 +970,7 @@ const acts={
   const f=S.ficha;
   const sk=stepsOf(f)[S.step][0];
   if(sk==='tipo'&&!f.tipo){toast('Elige un tipo para continuar');return}
-  if(sk==='lista'&&!f.lista){toast('Elige una lista para continuar');return}
+  if(sk==='lista'&&!(f.listas||[]).length){toast('Elige al menos una lista');return}
   S.step++;saveDraft();render();
  },
  back(){if(S.step===0){acts.exit();return}S.step--;saveDraft();render()},
