@@ -809,7 +809,7 @@ function makePDF(f){
  const kv=(title,rows)=>{
   doc.autoTable({...base,startY:y,head:[[titleCell(title,2)]],body:rows.map(r=>[ps(r[0]),ps(r[1])]),columnStyles:{0:{fontStyle:'bold',cellWidth:60,fillColor:[240,243,247]}}});after();
  };
- kv('Datos generales',[['Tipo de trabajo',fullTitle(f)],...datosRows(f)]);
+ if(f.tipo!=='revision')kv('Datos generales',[['Tipo de trabajo',fullTitle(f)],...datosRows(f)]);
  if(f.flow==='lim'){
   const grpTable=(title,on,arr,mat,noun)=>{
    if(on!==true||!(arr||[]).length){kv(title,[['¿Hay '+noun+'?',yn(on)]]);return}
@@ -825,13 +825,34 @@ function makePDF(f){
   if(!noAcu(f))grpTable('Acumuladores de agua caliente sanitaria',f.acum,f.acs,false,'acumulador');
  }
  if(f.tipo==='revision'){
-  revRows(f).forEach(b=>{
-   const LL=b.L;
-   const body=b.rows.map(r=>[ps(r[0]),{content:ps(r[1]),styles:{halign:'center',fontStyle:'bold',textColor:r[1]===LL.ok[1]?[185,28,28]:r[1]===LL.ok[0]?[21,128,61]:[110,120,135]}}]);
-   if(b.obs)body.push([{content:ps(b.obsLabel+': '+b.obs),colSpan:2,styles:{fontStyle:'italic'}}]);
-   const hh=['Elemento','Estado'].map((c,i)=>({content:c,styles:{fillColor:TT,textColor:D,fontStyle:'bold',halign:i?'center':'left',fontSize:9}}));
-   doc.autoTable({...base,startY:y,head:[[titleCell(b.list+': '+b.t,2)],hh],body,styles:{...base.styles,fontSize:9,cellPadding:1.6},columnStyles:{1:{cellWidth:40}}});after();
-  });
+  /* todo en UNA hoja: listas en columnas y letra que se ajusta sola */
+  doc.autoTable({...base,startY:y-1,margin:{top:40,left:10,right:10,bottom:18},body:[[ps('Instalación: '+(f.instalacion||'-')),ps('Fecha: '+fmtDate(f.fecha)),ps('Hora: '+(f.hora||'-')),ps('Persona de contacto: '+(f.responsable||'-'))]],styles:{...base.styles,fontSize:8.5,cellPadding:1.6,fillColor:[240,243,247]}});
+  const yS=doc.lastAutoTable.finalY+3;
+  const bl=revRows(f);
+  const lists=LORDER.filter(k=>(f.listas||[]).includes(k)).map(k=>({k,L:LISTAS[k],blocks:bl.filter(b=>b.lk===k)}));
+  const wt=l=>l.blocks.reduce((a,b)=>a+1+b.rows.length+(b.obs?1+Math.ceil(b.obs.length/40):0),1);
+  const nc=Math.max(1,Math.min(3,lists.length));
+  const parts=[];(function rec(st,left,acc){if(left===1){parts.push(acc.concat([lists.slice(st)]));return}for(let i=st+1;i<=lists.length-left+1;i++)rec(i,left-1,acc.concat([lists.slice(st,i)]))})(0,nc,[]);
+  const cols=parts.reduce((a,pp)=>{const m=Math.max(...pp.map(g=>g.reduce((x,l)=>x+wt(l),0)));return !a||m<a.m?{m,p:pp}:a},null).p;
+  const gap=4,colW=(190-(nc-1)*gap)/nc;
+  const draw=(d,fs,real)=>{
+   cols.forEach((g,ci)=>{
+    const body=[];
+    g.forEach(l=>{
+     body.push([{content:ps(l.L.label),colSpan:2,styles:{fillColor:C,textColor:255,fontStyle:'bold',fontSize:fs+1}}]);
+     l.blocks.forEach(b=>{
+      body.push([{content:ps(b.t),colSpan:2,styles:{fillColor:TT,textColor:D,fontStyle:'bold'}}]);
+      b.rows.forEach(r=>body.push([ps(r[0]),{content:ps(r[1]),styles:{halign:'center',fontStyle:'bold',textColor:r[1]===l.L.ok[1]?[185,28,28]:r[1]===l.L.ok[0]?[21,128,61]:[110,120,135]}}]));
+      if(b.obs)body.push([{content:ps(b.obsLabel+': '+b.obs),colSpan:2,styles:{fontStyle:'italic'}}]);
+     });
+    });
+    const x=10+ci*(colW+gap);
+    d.autoTable({theme:'grid',startY:yS,margin:{top:yS,left:x,right:210-x-colW,bottom:12},tableWidth:colW,body,styles:{fontSize:fs,cellPadding:{top:0.45,bottom:0.45,left:1,right:1},lineColor:[200,208,220],lineWidth:0.15,textColor:[11,18,32],valign:'middle'},columnStyles:{1:{cellWidth:12,halign:'center'}},didDrawPage:real?head:undefined});
+   });
+  };
+  let fs=9.5;
+  for(;fs>4.5;fs-=0.5){const t=new jsPDF({unit:'mm',format:'a4'});draw(t,fs,false);if(t.getNumberOfPages()===1)break}
+  draw(doc,fs,true);
  }else{
  const defs=PTDEF[f.tipo];
  const cols=[['Nº','']].concat(defs.map(d=>[d[1],d[0]==='agua'?'':d[2]]));
