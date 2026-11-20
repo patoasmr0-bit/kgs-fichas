@@ -251,7 +251,7 @@ const LISTAS={
 };
 const LORDER=['limpieza','mantenimiento','materias','residuos'];
 const stLabel=(L,v)=>v==='ok'?L.ok[0]:v==='ko'?L.ok[1]:'—';
-const noAcu=f=>f.tipoInst==='incendios';
+const noAcu=f=>['incendios','riego','clinica'].includes(f.tipoInst);
 const depTitle=f=>noAcu(f)?'Depósitos':'Depósitos de agua fría sanitaria';
 function stepsOf(f){
  if(f.flow==='lim'){
