@@ -445,7 +445,7 @@ function sDatos(f){
 }
 function sLista(f){
  return '<div class="stack">'+LORDER.map(k=>{const on=f.lista===k;
-  return '<button type="button" class="ch'+(on?' on':'')+'" style="justify-content:flex-start;min-height:68px;text-align:left" data-act="lista" data-v="'+k+'">'+(on?ico('check',24):'')+'<span>'+LISTAS[k].label+'<small>'+(k==='limpieza'?'Limpio / Sucio':'Bien / Mal')+'</small></span></button>'}).join('')+'</div><p class="hint">Elige la lista que vas a revisar. Después hay un paso por cada bloque.</p>';
+  return '<button type="button" class="ch'+(on?' on':'')+'" style="justify-content:flex-start;min-height:68px;text-align:left" data-act="lista" data-v="'+k+'">'+(on?ico('check',24):'')+'<span>'+LISTAS[k].label+'</span></button>'}).join('')+'</div><p class="hint">Elige la lista que vas a revisar. Después hay un paso por cada bloque.</p>';
 }
 function sBlock(f,key){
  const L=LISTAS[f.lista];if(!L)return '<div class="empty">Primero elige la lista.</div><button type="button" class="btn wide" data-act="goto" data-s="lista">Elegir lista</button>';
